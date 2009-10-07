@@ -296,10 +296,8 @@ namespace SpriteSheetPacker
 			Invoke(new MethodInvoker(BuildThreadComplete));
 		}
 
-		/*
-		 * This method does some trickery type stuff where we perform the PackImages method over and over, trying to reduce the image size
-		 * until we have found the smallest possible image we can fit.
-		 */
+		// This method does some trickery type stuff where we perform the TestPackingImages method over and over, 
+		// trying to reduce the image size until we have found the smallest possible image we can fit.
 		private bool PackImageRectangles(Dictionary<string, Size> imageSizes, ref int outputWidth, ref int outputHeight, int padding, Dictionary<string, Rectangle> imagePlacement)
 		{
 			// create a dictionary for our test image placements
