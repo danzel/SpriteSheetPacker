@@ -224,7 +224,7 @@ namespace SpriteSheetPacker
 				control.Enabled = false;
 
 			// create a thread to build our sprite sheet and start it
-			Thread buildThread = new Thread(BuildThread) { IsBackground = true, Priority = ThreadPriority.AboveNormal };
+			Thread buildThread = new Thread(BuildThread) { IsBackground = true };
 
 #if DEBUG
 			stopWatch.Reset();
