@@ -1,4 +1,30 @@
-﻿using System;
+﻿#region MIT License
+
+/*
+ * Copyright (c) 2009 Nick Gravelyn (nick@gravelyn.com), Markus Ewald (cygon@nuclex.org)
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a 
+ * copy of this software and associated documentation files (the "Software"), 
+ * to deal in the Software without restriction, including without limitation 
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense, 
+ * and/or sell copies of the Software, and to permit persons to whom the Software 
+ * is furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all 
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+ * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A 
+ * PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT 
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION 
+ * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE 
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
+ * 
+ */
+
+#endregion
+
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
@@ -260,20 +286,6 @@ namespace SpriteSheetPacker
 			if (!PackImageRectangles(imageSizes, ref outputWidth, ref outputHeight, padding, imagePlacement))
 				return;
 
-			// if we require a power of two texture, find the next power of two that can fit this image
-			if (powOf2CheckBox.Checked)
-			{
-				outputWidth = FindNextPowerOfTwo(outputWidth);
-				outputHeight = FindNextPowerOfTwo(outputHeight);
-			}
-
-			// if we require a square texture, set the width and height to the larger of the two
-			if (squareCheckBox.Checked)
-			{
-				int max = Math.Max(outputWidth, outputHeight);
-				outputWidth = outputHeight = max;
-			}
-
 			// create the output image
 			CreateOutputImage(outputWidth, outputHeight, imagePlacement);
 
@@ -307,7 +319,7 @@ namespace SpriteSheetPacker
 				testImagePlacement.Clear();
 
 				// try to pack the images into our current test size
-				if (!PackImages(imageSizes, testWidth, testHeight, padding, testImagePlacement))
+				if (!TestPackingImages(imageSizes, testWidth, testHeight, padding, testImagePlacement))
 				{
 					// if that failed...
 
@@ -320,8 +332,8 @@ namespace SpriteSheetPacker
 						return false;
 					}
 
-					// otherwise just break out and use the last good results later on
-					break;
+					// otherwise return true to use our last good results
+					return true;
 				}
 
 				// clear the imagePlacement dictionary and add our test results in
@@ -330,26 +342,47 @@ namespace SpriteSheetPacker
 					imagePlacement.Add(pair.Key, pair.Value);
                 
 				// figure out the smallest bitmap that will hold all the images
-				outputWidth = outputHeight = 0;
+				testWidth = testHeight = 0;
 				foreach (var pair in imagePlacement)
 				{
-					outputWidth = Math.Max(outputWidth, pair.Value.Right);
-					outputHeight = Math.Max(outputHeight, pair.Value.Bottom);
+					testWidth = Math.Max(testWidth, pair.Value.Right);
+					testHeight = Math.Max(testHeight, pair.Value.Bottom);
 				}
 
 				// subtract the extra padding on the right and bottom
-				outputWidth -= padding;
-				outputHeight -= padding;
+				testWidth -= padding;
+				testHeight -= padding;
+
+				// if we require a power of two texture, find the next power of two that can fit this image
+				if (powOf2CheckBox.Checked)
+				{
+					testWidth = FindNextPowerOfTwo(testWidth);
+					testHeight = FindNextPowerOfTwo(testHeight);
+				}
+
+				// if we require a square texture, set the width and height to the larger of the two
+				if (squareCheckBox.Checked)
+				{
+					int max = Math.Max(testWidth, testHeight);
+					testWidth = testHeight = max;
+				}
+
+				// if the test results are the same as our last output results, we've reached an optimal size,
+				// so we can just be done
+				if (testWidth == outputWidth && testHeight == outputHeight)
+					return true;
+
+				// save the test results as our last known good results
+				outputWidth = testWidth;
+				outputHeight = testHeight;
 
 				// subtract the smallest image size out for the next test iteration
-				testWidth = outputWidth - smallestImage.Width;
-				testHeight = outputHeight - smallestImage.Height;
+				testWidth -= smallestImage.Width;
+				testHeight -= smallestImage.Height;
 			}
-
-			return true;
 		}
 
-		private bool PackImages(Dictionary<string, Size> imageSizes, int testWidth, int testHeight, int padding, Dictionary<string, Rectangle> imagePlacements)
+		private bool TestPackingImages(Dictionary<string, Size> imageSizes, int testWidth, int testHeight, int padding, Dictionary<string, Rectangle> imagePlacements)
 		{
 			// create the rectangle packer
 			ArevaloRectanglePacker rectanglePacker = new ArevaloRectanglePacker(testWidth, testHeight);

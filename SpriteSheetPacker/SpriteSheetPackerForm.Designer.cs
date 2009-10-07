@@ -1,4 +1,30 @@
-﻿namespace SpriteSheetPacker
+﻿#region MIT License
+
+/*
+ * Copyright (c) 2009 Nick Gravelyn (nick@gravelyn.com), Markus Ewald (cygon@nuclex.org)
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a 
+ * copy of this software and associated documentation files (the "Software"), 
+ * to deal in the Software without restriction, including without limitation 
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense, 
+ * and/or sell copies of the Software, and to permit persons to whom the Software 
+ * is furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all 
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+ * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A 
+ * PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT 
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION 
+ * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE 
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
+ * 
+ */
+
+#endregion
+
+namespace SpriteSheetPacker
 {
 	partial class SpriteSheetPackerForm
 	{
@@ -66,6 +92,7 @@
 			this.listBox1.SelectionMode = System.Windows.Forms.SelectionMode.MultiSimple;
 			this.listBox1.Size = new System.Drawing.Size(697, 196);
 			this.listBox1.TabIndex = 0;
+			this.listBox1.TabStop = false;
 			this.listBox1.DragDrop += new System.Windows.Forms.DragEventHandler(this.listBox1_DragDrop);
 			this.listBox1.DragEnter += new System.Windows.Forms.DragEventHandler(this.listBox1_DragEnter);
 			// 
@@ -75,7 +102,7 @@
 			this.removeImageBtn.Location = new System.Drawing.Point(479, 214);
 			this.removeImageBtn.Name = "removeImageBtn";
 			this.removeImageBtn.Size = new System.Drawing.Size(112, 51);
-			this.removeImageBtn.TabIndex = 1;
+			this.removeImageBtn.TabIndex = 6;
 			this.removeImageBtn.Text = "Remove Selected";
 			this.removeImageBtn.UseVisualStyleBackColor = true;
 			this.removeImageBtn.Click += new System.EventHandler(this.removeImageBtn_Click);
@@ -86,7 +113,7 @@
 			this.addImageBtn.Location = new System.Drawing.Point(361, 214);
 			this.addImageBtn.Name = "addImageBtn";
 			this.addImageBtn.Size = new System.Drawing.Size(112, 51);
-			this.addImageBtn.TabIndex = 1;
+			this.addImageBtn.TabIndex = 5;
 			this.addImageBtn.Text = "Add Images";
 			this.addImageBtn.UseVisualStyleBackColor = true;
 			this.addImageBtn.Click += new System.EventHandler(this.addImageBtn_Click);
@@ -97,7 +124,7 @@
 			this.buildBtn.Location = new System.Drawing.Point(479, 380);
 			this.buildBtn.Name = "buildBtn";
 			this.buildBtn.Size = new System.Drawing.Size(230, 51);
-			this.buildBtn.TabIndex = 1;
+			this.buildBtn.TabIndex = 12;
 			this.buildBtn.Text = "Build Sprite Sheet";
 			this.buildBtn.UseVisualStyleBackColor = true;
 			this.buildBtn.Click += new System.EventHandler(this.buildBtn_Click);
@@ -115,7 +142,7 @@
 			this.clearBtn.Location = new System.Drawing.Point(597, 214);
 			this.clearBtn.Name = "clearBtn";
 			this.clearBtn.Size = new System.Drawing.Size(112, 51);
-			this.clearBtn.TabIndex = 1;
+			this.clearBtn.TabIndex = 7;
 			this.clearBtn.Text = "Remove All";
 			this.clearBtn.UseVisualStyleBackColor = true;
 			this.clearBtn.Click += new System.EventHandler(this.clearBtn_Click);
@@ -136,7 +163,7 @@
 			this.paddingTxtBox.Location = new System.Drawing.Point(124, 228);
 			this.paddingTxtBox.Name = "paddingTxtBox";
 			this.paddingTxtBox.Size = new System.Drawing.Size(100, 22);
-			this.paddingTxtBox.TabIndex = 3;
+			this.paddingTxtBox.TabIndex = 0;
 			this.paddingTxtBox.Text = "0";
 			this.paddingTxtBox.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
 			// 
@@ -156,7 +183,7 @@
 			this.maxWidthTxtBox.Location = new System.Drawing.Point(124, 300);
 			this.maxWidthTxtBox.Name = "maxWidthTxtBox";
 			this.maxWidthTxtBox.Size = new System.Drawing.Size(100, 22);
-			this.maxWidthTxtBox.TabIndex = 3;
+			this.maxWidthTxtBox.TabIndex = 1;
 			this.maxWidthTxtBox.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
 			// 
 			// label3
@@ -175,7 +202,7 @@
 			this.maxHeightTxtBox.Location = new System.Drawing.Point(124, 328);
 			this.maxHeightTxtBox.Name = "maxHeightTxtBox";
 			this.maxHeightTxtBox.Size = new System.Drawing.Size(100, 22);
-			this.maxHeightTxtBox.TabIndex = 3;
+			this.maxHeightTxtBox.TabIndex = 2;
 			this.maxHeightTxtBox.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
 			// 
 			// label4
@@ -204,7 +231,7 @@
 			this.imageFileTxtBox.Location = new System.Drawing.Point(378, 297);
 			this.imageFileTxtBox.Name = "imageFileTxtBox";
 			this.imageFileTxtBox.Size = new System.Drawing.Size(287, 22);
-			this.imageFileTxtBox.TabIndex = 3;
+			this.imageFileTxtBox.TabIndex = 8;
 			// 
 			// browseImageBtn
 			// 
@@ -212,7 +239,7 @@
 			this.browseImageBtn.Location = new System.Drawing.Point(671, 297);
 			this.browseImageBtn.Name = "browseImageBtn";
 			this.browseImageBtn.Size = new System.Drawing.Size(38, 22);
-			this.browseImageBtn.TabIndex = 4;
+			this.browseImageBtn.TabIndex = 9;
 			this.browseImageBtn.Text = "...";
 			this.browseImageBtn.UseVisualStyleBackColor = true;
 			this.browseImageBtn.Click += new System.EventHandler(this.browseImageBtn_Click);
@@ -233,7 +260,7 @@
 			this.textFileTxtBox.Location = new System.Drawing.Point(378, 326);
 			this.textFileTxtBox.Name = "textFileTxtBox";
 			this.textFileTxtBox.Size = new System.Drawing.Size(287, 22);
-			this.textFileTxtBox.TabIndex = 3;
+			this.textFileTxtBox.TabIndex = 10;
 			// 
 			// browseTextBtn
 			// 
@@ -241,7 +268,7 @@
 			this.browseTextBtn.Location = new System.Drawing.Point(671, 326);
 			this.browseTextBtn.Name = "browseTextBtn";
 			this.browseTextBtn.Size = new System.Drawing.Size(38, 22);
-			this.browseTextBtn.TabIndex = 4;
+			this.browseTextBtn.TabIndex = 11;
 			this.browseTextBtn.Text = "...";
 			this.browseTextBtn.UseVisualStyleBackColor = true;
 			this.browseTextBtn.Click += new System.EventHandler(this.browseTextBtn_Click);
@@ -264,7 +291,7 @@
 			this.powOf2CheckBox.Name = "powOf2CheckBox";
 			this.powOf2CheckBox.RightToLeft = System.Windows.Forms.RightToLeft.No;
 			this.powOf2CheckBox.Size = new System.Drawing.Size(224, 21);
-			this.powOf2CheckBox.TabIndex = 5;
+			this.powOf2CheckBox.TabIndex = 3;
 			this.powOf2CheckBox.Text = "Require Power of Two Output?";
 			this.powOf2CheckBox.UseVisualStyleBackColor = true;
 			// 
@@ -276,7 +303,7 @@
 			this.squareCheckBox.Name = "squareCheckBox";
 			this.squareCheckBox.RightToLeft = System.Windows.Forms.RightToLeft.No;
 			this.squareCheckBox.Size = new System.Drawing.Size(185, 21);
-			this.squareCheckBox.TabIndex = 5;
+			this.squareCheckBox.TabIndex = 4;
 			this.squareCheckBox.Text = "Require Square Output?";
 			this.squareCheckBox.UseVisualStyleBackColor = true;
 			// 
