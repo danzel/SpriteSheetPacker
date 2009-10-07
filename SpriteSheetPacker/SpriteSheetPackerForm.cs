@@ -37,9 +37,7 @@ namespace SpriteSheetPacker
 {
 	public partial class SpriteSheetPackerForm : Form
 	{
-#if DEBUG
 		private static readonly Stopwatch stopWatch = new Stopwatch();
-#endif
 
 		// our default maximum sprite sheet size
 		private const int DefaultMaximumSheetWidth = 4096;
@@ -53,6 +51,9 @@ namespace SpriteSheetPacker
 
 		// a list of the files we'll build into our sprite sheet
 		private readonly List<string> files = new List<string>();
+
+		// did our build succeed
+		private bool success;
 
 		public SpriteSheetPackerForm()
 		{
@@ -178,7 +179,7 @@ namespace SpriteSheetPacker
 				// store the text file path
 				textFileTxtBox.Text = textSaveFileDialog.FileName;
 
-				// if no image path is chosen, make a path with the same name as the image but with the txt extension
+				// if no image path is chosen, make a path with the same name as the text file but with the png extension
 				if (string.IsNullOrEmpty(imageFileTxtBox.Text))
 					imageFileTxtBox.Text = textSaveFileDialog.FileName.Remove(textSaveFileDialog.FileName.Length - 3) + "png";
 			}
@@ -192,7 +193,7 @@ namespace SpriteSheetPacker
 				ShowBuildError("No images to pack into sheet");
 				return;
 			}
-			if (string.IsNullOrEmpty(imageSaveFileDialog.FileName))
+			if (string.IsNullOrEmpty(imageFileTxtBox.Text))
 			{
 				ShowBuildError("No image filename given.");
 				return;
@@ -213,7 +214,7 @@ namespace SpriteSheetPacker
 				ShowBuildError("Maximum height is not a valid integer value greater than 0.");
 				return;
 			}
-			if (!int.TryParse(maxWidthTxtBox.Text, out padding) || padding < 0)
+			if (!int.TryParse(paddingTxtBox.Text, out padding) || padding < 0)
 			{
 				ShowBuildError("Image padding is not a valid non-negative integer");
 				return;
@@ -226,26 +227,39 @@ namespace SpriteSheetPacker
 			// create a thread to build our sprite sheet and start it
 			Thread buildThread = new Thread(BuildThread) { IsBackground = true };
 
-#if DEBUG
 			stopWatch.Reset();
 			stopWatch.Start();
-#endif
 
 			buildThread.Start();
 		}
 
 		private void BuildThreadComplete()
 		{
-#if DEBUG
 			stopWatch.Stop();
-			MessageBox.Show("Build completed in " + stopWatch.Elapsed.TotalSeconds + " seconds.");
+			if (success)
+			{
+#if DEBUG
+				MessageBox.Show("Build completed in " + stopWatch.Elapsed.TotalSeconds + " seconds.");
+#else
+				MessageBox.Show("Build Complete", "Finished", MessageBoxButtons.OK, MessageBoxIcon.Information);
 #endif
+			}
+
 			// re-enable all our controls
 			foreach (Control control in Controls)
 				control.Enabled = true;
 		}
 
 		private void BuildThread()
+		{
+			// build our sprite sheet
+			success = BuildSpriteSheet();
+
+			// invoke the complete method to re-enable our controls
+			Invoke(new MethodInvoker(BuildThreadComplete));
+		}
+
+		private bool BuildSpriteSheet()
 		{
 			// read our values. we check before this thread, so no worries here
 			int outputWidth = int.Parse(maxWidthTxtBox.Text);
@@ -263,11 +277,11 @@ namespace SpriteSheetPacker
 				if (bitmap == null)
 				{
 					ShowBuildError("Could not load " + image + ".");
-					return;
+					return false;
 				}
 				imageSizes.Add(image, bitmap.Size);
 			}
-			
+
 			// sort our files by file size so we place large sprites first
 			files.Sort(
 				(f1, f2) =>
@@ -284,16 +298,17 @@ namespace SpriteSheetPacker
 
 			// try to pack the images
 			if (!PackImageRectangles(imageSizes, ref outputWidth, ref outputHeight, padding, imagePlacement))
-				return;
+				return false;
 
 			// create the output image
-			CreateOutputImage(outputWidth, outputHeight, imagePlacement);
+			if (!CreateOutputImage(outputWidth, outputHeight, imagePlacement))
+				return false;
 
 			// open a stream writer for the text file
-			WriteTextFile(imageSizes, imagePlacement);
+			if (!WriteTextFile(imageSizes, imagePlacement))
+				return false;
 
-			// invoke the complete method to re-enable our controls
-			Invoke(new MethodInvoker(BuildThreadComplete));
+			return true;
 		}
 
 		// This method does some trickery type stuff where we perform the TestPackingImages method over and over, 
@@ -404,37 +419,65 @@ namespace SpriteSheetPacker
 			return true;
 		}
 
-		private void CreateOutputImage(int outputWidth, int outputHeight, Dictionary<string, Rectangle> imagePlacement)
+		private bool CreateOutputImage(int outputWidth, int outputHeight, Dictionary<string, Rectangle> imagePlacement)
 		{
-			Bitmap outputImage = new Bitmap(outputWidth, outputHeight, PixelFormat.Format32bppArgb);
-
-			// create a graphics object from the output
-			Graphics graphics = Graphics.FromImage(outputImage);
-
-			// draw all the images into the output image
-			foreach (var image in files)
+			try
 			{
-				Image bitmapImage = Image.FromFile(image);
-				graphics.DrawImage(bitmapImage, imagePlacement[image]);
-			}
+				Bitmap outputImage = new Bitmap(outputWidth, outputHeight, PixelFormat.Format32bppArgb);
 
-			// save the image as a PNG
-			outputImage.Save(imageFileTxtBox.Text, ImageFormat.Png);
-		}
-
-		private void WriteTextFile(Dictionary<string, Size> imageSizes, Dictionary<string, Rectangle> imagePlacement)
-		{
-			using (StreamWriter writer = new StreamWriter(textFileTxtBox.Text))
-			{
+				// draw all the images into the output image
 				foreach (var image in files)
 				{
-					// get the bitmap and destination
-					Size imageSize = imageSizes[image];
-					Rectangle destination = imagePlacement[image];
+					Rectangle location = imagePlacement[image];
+					Bitmap bitmap = Bitmap.FromFile(image) as Bitmap;
+					if (bitmap == null)
+					{
+						ShowBuildError("Could not load " + image + ".");
+						return false;
+					}
 
-					// write out the destination rectangle for this bitmap
-					writer.WriteLine(string.Format("{0} = {1} {2} {3} {4}", Path.GetFileNameWithoutExtension(image), destination.X, destination.Y, imageSize.Width, imageSize.Height));
+					// copy pixels over to avoid antialiasing or any other side effects of drawing
+					// the subimages to the output image using Graphics
+					for (int x = 0; x < bitmap.Width; x++)
+						for (int y = 0; y < bitmap.Height; y++)
+							outputImage.SetPixel(location.X + x, location.Y + y, bitmap.GetPixel(x, y));
 				}
+
+				// save the image as a PNG
+				outputImage.Save(imageFileTxtBox.Text, ImageFormat.Png);
+
+				return true;
+			}
+			catch
+			{
+				ShowBuildError("There was an error building the sprite sheet image.");
+				return false;
+			}
+		}
+
+		private bool WriteTextFile(Dictionary<string, Size> imageSizes, Dictionary<string, Rectangle> imagePlacement)
+		{
+			try
+			{
+				using (StreamWriter writer = new StreamWriter(textFileTxtBox.Text))
+				{
+					foreach (var image in files)
+					{
+						// get the bitmap and destination
+						Size imageSize = imageSizes[image];
+						Rectangle destination = imagePlacement[image];
+
+						// write out the destination rectangle for this bitmap
+						writer.WriteLine(string.Format("{0} = {1} {2} {3} {4}", Path.GetFileNameWithoutExtension(image), destination.X, destination.Y, imageSize.Width, imageSize.Height));
+					}
+				}
+
+				return true;
+			}
+			catch
+			{
+				ShowBuildError("There was an error building the sprite sheet text file.");
+				return false;
 			}
 		}
 
