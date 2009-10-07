@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -10,6 +11,10 @@ namespace SpriteSheetPacker
 {
 	public partial class SpriteSheetPackerForm : Form
 	{
+#if DEBUG
+		private static readonly Stopwatch stopWatch = new Stopwatch();
+#endif
+
 		// our default maximum sprite sheet size
 		private const int DefaultMaximumSheetWidth = 4096;
 		private const int DefaultMaximumSheetHeight = 4096;
@@ -194,11 +199,21 @@ namespace SpriteSheetPacker
 
 			// create a thread to build our sprite sheet and start it
 			Thread buildThread = new Thread(BuildThread) { IsBackground = true, Priority = ThreadPriority.AboveNormal };
+
+#if DEBUG
+			stopWatch.Reset();
+			stopWatch.Start();
+#endif
+
 			buildThread.Start();
 		}
 
 		private void BuildThreadComplete()
 		{
+#if DEBUG
+			stopWatch.Stop();
+			MessageBox.Show("Build completed in " + stopWatch.Elapsed.TotalSeconds + " seconds.");
+#endif
 			// re-enable all our controls
 			foreach (Control control in Controls)
 				control.Enabled = true;
@@ -211,51 +226,39 @@ namespace SpriteSheetPacker
 			int outputHeight = int.Parse(maxHeightTxtBox.Text);
 			int padding = int.Parse(paddingTxtBox.Text);
 
-			// some dictionaries to hold the bitmaps and destination rectangles
-			Dictionary<string, Bitmap> imageBitmaps = new Dictionary<string, Bitmap>();
+			// some dictionaries to hold the image sizes and destination rectangles
+			Dictionary<string, Size> imageSizes = new Dictionary<string, Size>();
 			Dictionary<string, Rectangle> imagePlacement = new Dictionary<string, Rectangle>();
 
-			// create the rectangle packer
-			ArevaloRectanglePacker rectanglePacker = new ArevaloRectanglePacker(outputWidth, outputHeight);
-
+			// get the sizes of all the images
 			foreach (var image in files)
 			{
-				// load the bitmap for this file
 				Bitmap bitmap = Bitmap.FromFile(image) as Bitmap;
-
 				if (bitmap == null)
 				{
 					ShowBuildError("Could not load " + image + ".");
 					return;
 				}
-
-				imageBitmaps.Add(image, bitmap);
-
-				// pack the image
-				Point origin;
-				if (!rectanglePacker.TryPack(bitmap.Width + padding, bitmap.Height + padding, out origin))
-				{
-					ShowBuildError("Output image not large enough to fit all images.");
-					return;
-				}
-
-				// add the destination rectangle to our dictionary
-				imagePlacement.Add(image, new Rectangle(origin.X, origin.Y, bitmap.Width + padding, bitmap.Height + padding));
-			}
-
-			// reset to 0
-			outputWidth = outputHeight = 0;
-
-			// figure out the smallest bitmap that will hold all the images
-			foreach (var pair in imagePlacement)
-			{
-				outputWidth = Math.Max(outputWidth, pair.Value.Right);
-				outputHeight = Math.Max(outputHeight, pair.Value.Bottom);
+				imageSizes.Add(image, bitmap.Size);
 			}
 			
-			// subtract the extra padding on the right and bottom
-			outputWidth -= padding;
-			outputHeight -= padding;
+			// sort our files by file size so we place large sprites first
+			files.Sort(
+				(f1, f2) =>
+				{
+					Size b1 = imageSizes[f1];
+					Size b2 = imageSizes[f2];
+
+					int c = -b1.Width.CompareTo(b2.Width);
+					if (c != 0)
+						return c;
+
+					return -b1.Height.CompareTo(b2.Height);
+				});
+
+			// try to pack the images
+			if (!PackImageRectangles(imageSizes, ref outputWidth, ref outputHeight, padding, imagePlacement))
+				return;
 
 			// if we require a power of two texture, find the next power of two that can fit this image
 			if (powOf2CheckBox.Checked)
@@ -272,6 +275,106 @@ namespace SpriteSheetPacker
 			}
 
 			// create the output image
+			CreateOutputImage(outputWidth, outputHeight, imagePlacement);
+
+			// open a stream writer for the text file
+			WriteTextFile(imageSizes, imagePlacement);
+
+			// invoke the complete method to re-enable our controls
+			Invoke(new MethodInvoker(BuildThreadComplete));
+		}
+
+		/*
+		 * This method does some trickery type stuff where we perform the PackImages method over and over, trying to reduce the image size
+		 * until we have found the smallest possible image we can fit.
+		 */
+		private bool PackImageRectangles(Dictionary<string, Size> imageSizes, ref int outputWidth, ref int outputHeight, int padding, Dictionary<string, Rectangle> imagePlacement)
+		{
+			// create a dictionary for our test image placements
+			Dictionary<string, Rectangle> testImagePlacement = new Dictionary<string, Rectangle>();
+
+			// get the size of our smallest image
+			Size smallestImage = imageSizes[files[files.Count - 1]];
+
+			// we need a couple values for testing
+			int testWidth = outputWidth;
+			int testHeight = outputHeight;
+
+			// just keep looping...
+			while (true)
+			{
+				// make sure our test dictionary is empty
+				testImagePlacement.Clear();
+
+				// try to pack the images into our current test size
+				if (!PackImages(imageSizes, testWidth, testHeight, padding, testImagePlacement))
+				{
+					// if that failed...
+
+					// if we have no images in imagePlacement, i.e. we've never succeeded at PackImages,
+					// show an error and return false since there is no way to fit the images into our
+					// maximum size texture
+					if (imagePlacement.Count == 0)
+					{
+						ShowBuildError("Output image not large enough to fit all images.");
+						return false;
+					}
+
+					// otherwise just break out and use the last good results later on
+					break;
+				}
+
+				// clear the imagePlacement dictionary and add our test results in
+				imagePlacement.Clear();
+				foreach (var pair in testImagePlacement)
+					imagePlacement.Add(pair.Key, pair.Value);
+                
+				// figure out the smallest bitmap that will hold all the images
+				outputWidth = outputHeight = 0;
+				foreach (var pair in imagePlacement)
+				{
+					outputWidth = Math.Max(outputWidth, pair.Value.Right);
+					outputHeight = Math.Max(outputHeight, pair.Value.Bottom);
+				}
+
+				// subtract the extra padding on the right and bottom
+				outputWidth -= padding;
+				outputHeight -= padding;
+
+				// subtract the smallest image size out for the next test iteration
+				testWidth = outputWidth - smallestImage.Width;
+				testHeight = outputHeight - smallestImage.Height;
+			}
+
+			return true;
+		}
+
+		private bool PackImages(Dictionary<string, Size> imageSizes, int testWidth, int testHeight, int padding, Dictionary<string, Rectangle> imagePlacements)
+		{
+			// create the rectangle packer
+			ArevaloRectanglePacker rectanglePacker = new ArevaloRectanglePacker(testWidth, testHeight);
+
+			foreach (var image in files)
+			{
+				// get the bitmap for this file
+				Size size = imageSizes[image];
+
+				// pack the image
+				Point origin;
+				if (!rectanglePacker.TryPack(size.Width + padding, size.Height + padding, out origin))
+				{
+					return false;
+				}
+
+				// add the destination rectangle to our dictionary
+				imagePlacements.Add(image, new Rectangle(origin.X, origin.Y, size.Width + padding, size.Height + padding));
+			}
+
+			return true;
+		}
+
+		private void CreateOutputImage(int outputWidth, int outputHeight, Dictionary<string, Rectangle> imagePlacement)
+		{
 			Bitmap outputImage = new Bitmap(outputWidth, outputHeight, PixelFormat.Format32bppArgb);
 
 			// create a graphics object from the output
@@ -279,28 +382,29 @@ namespace SpriteSheetPacker
 
 			// draw all the images into the output image
 			foreach (var image in files)
-				graphics.DrawImage(imageBitmaps[image], imagePlacement[image]);
+			{
+				Image bitmapImage = Image.FromFile(image);
+				graphics.DrawImage(bitmapImage, imagePlacement[image]);
+			}
 
 			// save the image as a PNG
 			outputImage.Save(imageFileTxtBox.Text, ImageFormat.Png);
-			
-			// open a stream writer for the text file
+		}
+
+		private void WriteTextFile(Dictionary<string, Size> imageSizes, Dictionary<string, Rectangle> imagePlacement)
+		{
 			using (StreamWriter writer = new StreamWriter(textFileTxtBox.Text))
 			{
 				foreach (var image in files)
 				{
 					// get the bitmap and destination
-					Bitmap bitmap = imageBitmaps[image];
+					Size imageSize = imageSizes[image];
 					Rectangle destination = imagePlacement[image];
 
 					// write out the destination rectangle for this bitmap
-					writer.WriteLine(string.Format("{0} = {1} {2} {3} {4}", Path.GetFileNameWithoutExtension(image), destination.X, destination.Y, bitmap.Width, bitmap.Height));
-
+					writer.WriteLine(string.Format("{0} = {1} {2} {3} {4}", Path.GetFileNameWithoutExtension(image), destination.X, destination.Y, imageSize.Width, imageSize.Height));
 				}
 			}
-
-			// invoke the complete method to re-enable our controls
-			Invoke(new MethodInvoker(BuildThreadComplete));
 		}
 
 		private static void ShowBuildError(string error)
