@@ -40,11 +40,11 @@ namespace SpriteSheetPacker
 		private static readonly Stopwatch stopWatch = new Stopwatch();
 
 		// our default maximum sprite sheet size
-		private const int DefaultMaximumSheetWidth = 4096;
-		private const int DefaultMaximumSheetHeight = 4096;
+		private const int defaultMaximumSheetWidth = 4096;
+		private const int defaultMaximumSheetHeight = 4096;
 
 		// our default image padding
-		private const int DefaultImagePadding = 0;
+		private const int defaultImagePadding = 0;
 
 		// the valid extensions for images
 		private static readonly string[] imageExtensions = new[] { "png", "jpg", "bmp", "gif" };
@@ -65,9 +65,9 @@ namespace SpriteSheetPacker
 				imageOpenFileDialog.Filter += string.Format("*.{0};", ext);
 
 			// set the UI values to our defaults
-			maxWidthTxtBox.Text = DefaultMaximumSheetWidth.ToString();
-			maxHeightTxtBox.Text = DefaultMaximumSheetHeight.ToString();
-			paddingTxtBox.Text = DefaultImagePadding.ToString();
+			maxWidthTxtBox.Text = defaultMaximumSheetWidth.ToString();
+			maxHeightTxtBox.Text = defaultMaximumSheetHeight.ToString();
+			paddingTxtBox.Text = defaultImagePadding.ToString();
 		}
 
 		// determines if a file is an image we accept
@@ -461,7 +461,11 @@ namespace SpriteSheetPacker
 			{
 				using (StreamWriter writer = new StreamWriter(textFileTxtBox.Text))
 				{
-					foreach (var image in files)
+					// copy the files list and sort alphabetically
+					List<string> outputFiles = new List<string>(files);
+					outputFiles.Sort();
+
+					foreach (var image in outputFiles)
 					{
 						// get the bitmap and destination
 						Size imageSize = imageSizes[image];
