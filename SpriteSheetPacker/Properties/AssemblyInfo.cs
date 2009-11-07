@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("Sprite Sheet Packer")]
-[assembly: AssemblyDescription("This tool packs a set of images into a single image sprite sheet, outputting both the combine image (as a PNG) as well as a text file mapping file names to the rectangular region in which that image resides in the sprite sheet.")]
+[assembly: AssemblyDescription("This tool packs a set of images into a single image sprite sheet, outputting both the combined image as well as a file mapping the image file names to the rectangular region in which that image resides in the sprite sheet.")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Nick Gravelyn")]
 [assembly: AssemblyProduct("Sprite Sheet Packer")]
@@ -30,5 +30,5 @@ using System.Runtime.InteropServices;
 //
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
-[assembly: AssemblyVersion("1.1.*")]
+[assembly: AssemblyVersion("1.2.*")]
 [assembly: AssemblyFileVersion("1.0.0.0")]
