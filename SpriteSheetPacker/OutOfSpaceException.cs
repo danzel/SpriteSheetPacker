@@ -36,7 +36,7 @@ namespace SpriteSheetPacker
 	///   the object you tried to pack into the remaining packing area.
 	/// </remarks>
 	[Serializable]
-	public class OutOfSpaceException : Exception 
+	internal class OutOfSpaceException : Exception 
 	{
 		/// <summary>Initializes the exception</summary>
 		public OutOfSpaceException()

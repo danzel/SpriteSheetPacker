@@ -71,10 +71,10 @@ namespace SpriteSheetPacker
 			this.imageFileTxtBox = new System.Windows.Forms.TextBox();
 			this.browseImageBtn = new System.Windows.Forms.Button();
 			this.label6 = new System.Windows.Forms.Label();
-			this.textFileTxtBox = new System.Windows.Forms.TextBox();
-			this.browseTextBtn = new System.Windows.Forms.Button();
+			this.mapFileTxtBox = new System.Windows.Forms.TextBox();
+			this.browseMapBtn = new System.Windows.Forms.Button();
 			this.imageSaveFileDialog = new System.Windows.Forms.SaveFileDialog();
-			this.textSaveFileDialog = new System.Windows.Forms.SaveFileDialog();
+			this.mapSaveFileDialog = new System.Windows.Forms.SaveFileDialog();
 			this.powOf2CheckBox = new System.Windows.Forms.CheckBox();
 			this.squareCheckBox = new System.Windows.Forms.CheckBox();
 			this.SuspendLayout();
@@ -90,7 +90,7 @@ namespace SpriteSheetPacker
 			this.listBox1.Location = new System.Drawing.Point(12, 12);
 			this.listBox1.Name = "listBox1";
 			this.listBox1.SelectionMode = System.Windows.Forms.SelectionMode.MultiSimple;
-			this.listBox1.Size = new System.Drawing.Size(697, 196);
+			this.listBox1.Size = new System.Drawing.Size(697, 260);
 			this.listBox1.TabIndex = 0;
 			this.listBox1.TabStop = false;
 			this.listBox1.DragDrop += new System.Windows.Forms.DragEventHandler(this.listBox1_DragDrop);
@@ -99,7 +99,7 @@ namespace SpriteSheetPacker
 			// removeImageBtn
 			// 
 			this.removeImageBtn.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-			this.removeImageBtn.Location = new System.Drawing.Point(479, 214);
+			this.removeImageBtn.Location = new System.Drawing.Point(479, 294);
 			this.removeImageBtn.Name = "removeImageBtn";
 			this.removeImageBtn.Size = new System.Drawing.Size(112, 51);
 			this.removeImageBtn.TabIndex = 6;
@@ -110,7 +110,7 @@ namespace SpriteSheetPacker
 			// addImageBtn
 			// 
 			this.addImageBtn.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-			this.addImageBtn.Location = new System.Drawing.Point(361, 214);
+			this.addImageBtn.Location = new System.Drawing.Point(361, 294);
 			this.addImageBtn.Name = "addImageBtn";
 			this.addImageBtn.Size = new System.Drawing.Size(112, 51);
 			this.addImageBtn.TabIndex = 5;
@@ -121,7 +121,7 @@ namespace SpriteSheetPacker
 			// buildBtn
 			// 
 			this.buildBtn.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-			this.buildBtn.Location = new System.Drawing.Point(479, 380);
+			this.buildBtn.Location = new System.Drawing.Point(479, 460);
 			this.buildBtn.Name = "buildBtn";
 			this.buildBtn.Size = new System.Drawing.Size(230, 51);
 			this.buildBtn.TabIndex = 12;
@@ -139,7 +139,7 @@ namespace SpriteSheetPacker
 			// clearBtn
 			// 
 			this.clearBtn.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-			this.clearBtn.Location = new System.Drawing.Point(597, 214);
+			this.clearBtn.Location = new System.Drawing.Point(597, 294);
 			this.clearBtn.Name = "clearBtn";
 			this.clearBtn.Size = new System.Drawing.Size(112, 51);
 			this.clearBtn.TabIndex = 7;
@@ -151,7 +151,7 @@ namespace SpriteSheetPacker
 			// 
 			this.label1.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
 			this.label1.AutoSize = true;
-			this.label1.Location = new System.Drawing.Point(12, 231);
+			this.label1.Location = new System.Drawing.Point(12, 311);
 			this.label1.Name = "label1";
 			this.label1.Size = new System.Drawing.Size(106, 17);
 			this.label1.TabIndex = 2;
@@ -160,7 +160,7 @@ namespace SpriteSheetPacker
 			// paddingTxtBox
 			// 
 			this.paddingTxtBox.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-			this.paddingTxtBox.Location = new System.Drawing.Point(124, 228);
+			this.paddingTxtBox.Location = new System.Drawing.Point(124, 308);
 			this.paddingTxtBox.Name = "paddingTxtBox";
 			this.paddingTxtBox.Size = new System.Drawing.Size(100, 22);
 			this.paddingTxtBox.TabIndex = 0;
@@ -171,7 +171,7 @@ namespace SpriteSheetPacker
 			// 
 			this.label2.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
 			this.label2.AutoSize = true;
-			this.label2.Location = new System.Drawing.Point(12, 280);
+			this.label2.Location = new System.Drawing.Point(12, 360);
 			this.label2.Name = "label2";
 			this.label2.Size = new System.Drawing.Size(142, 17);
 			this.label2.TabIndex = 2;
@@ -180,7 +180,7 @@ namespace SpriteSheetPacker
 			// maxWidthTxtBox
 			// 
 			this.maxWidthTxtBox.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-			this.maxWidthTxtBox.Location = new System.Drawing.Point(124, 300);
+			this.maxWidthTxtBox.Location = new System.Drawing.Point(124, 380);
 			this.maxWidthTxtBox.Name = "maxWidthTxtBox";
 			this.maxWidthTxtBox.Size = new System.Drawing.Size(100, 22);
 			this.maxWidthTxtBox.TabIndex = 1;
@@ -190,7 +190,7 @@ namespace SpriteSheetPacker
 			// 
 			this.label3.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
 			this.label3.AutoSize = true;
-			this.label3.Location = new System.Drawing.Point(70, 303);
+			this.label3.Location = new System.Drawing.Point(70, 383);
 			this.label3.Name = "label3";
 			this.label3.Size = new System.Drawing.Size(48, 17);
 			this.label3.TabIndex = 2;
@@ -199,7 +199,7 @@ namespace SpriteSheetPacker
 			// maxHeightTxtBox
 			// 
 			this.maxHeightTxtBox.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-			this.maxHeightTxtBox.Location = new System.Drawing.Point(124, 328);
+			this.maxHeightTxtBox.Location = new System.Drawing.Point(124, 408);
 			this.maxHeightTxtBox.Name = "maxHeightTxtBox";
 			this.maxHeightTxtBox.Size = new System.Drawing.Size(100, 22);
 			this.maxHeightTxtBox.TabIndex = 2;
@@ -209,7 +209,7 @@ namespace SpriteSheetPacker
 			// 
 			this.label4.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
 			this.label4.AutoSize = true;
-			this.label4.Location = new System.Drawing.Point(65, 331);
+			this.label4.Location = new System.Drawing.Point(65, 411);
 			this.label4.Name = "label4";
 			this.label4.Size = new System.Drawing.Size(53, 17);
 			this.label4.TabIndex = 2;
@@ -218,25 +218,26 @@ namespace SpriteSheetPacker
 			// label5
 			// 
 			this.label5.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-			this.label5.AutoSize = true;
-			this.label5.Location = new System.Drawing.Point(266, 300);
+			this.label5.Location = new System.Drawing.Point(266, 380);
 			this.label5.Name = "label5";
-			this.label5.Size = new System.Drawing.Size(97, 17);
+			this.label5.Size = new System.Drawing.Size(106, 17);
 			this.label5.TabIndex = 2;
-			this.label5.Text = "Output Image:";
+			this.label5.Text = "Image File:";
+			this.label5.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
 			// 
 			// imageFileTxtBox
 			// 
 			this.imageFileTxtBox.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-			this.imageFileTxtBox.Location = new System.Drawing.Point(378, 297);
+			this.imageFileTxtBox.Location = new System.Drawing.Point(378, 377);
 			this.imageFileTxtBox.Name = "imageFileTxtBox";
+			this.imageFileTxtBox.ReadOnly = true;
 			this.imageFileTxtBox.Size = new System.Drawing.Size(287, 22);
 			this.imageFileTxtBox.TabIndex = 8;
 			// 
 			// browseImageBtn
 			// 
 			this.browseImageBtn.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-			this.browseImageBtn.Location = new System.Drawing.Point(671, 297);
+			this.browseImageBtn.Location = new System.Drawing.Point(671, 377);
 			this.browseImageBtn.Name = "browseImageBtn";
 			this.browseImageBtn.Size = new System.Drawing.Size(38, 22);
 			this.browseImageBtn.TabIndex = 9;
@@ -247,47 +248,48 @@ namespace SpriteSheetPacker
 			// label6
 			// 
 			this.label6.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-			this.label6.AutoSize = true;
-			this.label6.Location = new System.Drawing.Point(266, 329);
+			this.label6.Location = new System.Drawing.Point(266, 409);
 			this.label6.Name = "label6";
-			this.label6.Size = new System.Drawing.Size(86, 17);
+			this.label6.Size = new System.Drawing.Size(106, 17);
 			this.label6.TabIndex = 2;
-			this.label6.Text = "Output Text:";
+			this.label6.Text = "Map File:";
+			this.label6.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
 			// 
-			// textFileTxtBox
+			// mapFileTxtBox
 			// 
-			this.textFileTxtBox.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-			this.textFileTxtBox.Location = new System.Drawing.Point(378, 326);
-			this.textFileTxtBox.Name = "textFileTxtBox";
-			this.textFileTxtBox.Size = new System.Drawing.Size(287, 22);
-			this.textFileTxtBox.TabIndex = 10;
+			this.mapFileTxtBox.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
+			this.mapFileTxtBox.Location = new System.Drawing.Point(378, 406);
+			this.mapFileTxtBox.Name = "mapFileTxtBox";
+			this.mapFileTxtBox.ReadOnly = true;
+			this.mapFileTxtBox.Size = new System.Drawing.Size(287, 22);
+			this.mapFileTxtBox.TabIndex = 10;
 			// 
-			// browseTextBtn
+			// browseMapBtn
 			// 
-			this.browseTextBtn.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-			this.browseTextBtn.Location = new System.Drawing.Point(671, 326);
-			this.browseTextBtn.Name = "browseTextBtn";
-			this.browseTextBtn.Size = new System.Drawing.Size(38, 22);
-			this.browseTextBtn.TabIndex = 11;
-			this.browseTextBtn.Text = "...";
-			this.browseTextBtn.UseVisualStyleBackColor = true;
-			this.browseTextBtn.Click += new System.EventHandler(this.browseTextBtn_Click);
+			this.browseMapBtn.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
+			this.browseMapBtn.Location = new System.Drawing.Point(671, 406);
+			this.browseMapBtn.Name = "browseMapBtn";
+			this.browseMapBtn.Size = new System.Drawing.Size(38, 22);
+			this.browseMapBtn.TabIndex = 11;
+			this.browseMapBtn.Text = "...";
+			this.browseMapBtn.UseVisualStyleBackColor = true;
+			this.browseMapBtn.Click += new System.EventHandler(this.browseMapBtn_Click);
 			// 
 			// imageSaveFileDialog
 			// 
 			this.imageSaveFileDialog.DefaultExt = "png";
 			this.imageSaveFileDialog.Filter = "PNG Files|*.png";
 			// 
-			// textSaveFileDialog
+			// mapSaveFileDialog
 			// 
-			this.textSaveFileDialog.DefaultExt = "txt";
-			this.textSaveFileDialog.Filter = "TXT Files|*.txt";
+			this.mapSaveFileDialog.DefaultExt = "txt";
+			this.mapSaveFileDialog.Filter = "TXT Files|*.txt";
 			// 
 			// powOf2CheckBox
 			// 
 			this.powOf2CheckBox.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
 			this.powOf2CheckBox.AutoSize = true;
-			this.powOf2CheckBox.Location = new System.Drawing.Point(15, 366);
+			this.powOf2CheckBox.Location = new System.Drawing.Point(15, 446);
 			this.powOf2CheckBox.Name = "powOf2CheckBox";
 			this.powOf2CheckBox.RightToLeft = System.Windows.Forms.RightToLeft.No;
 			this.powOf2CheckBox.Size = new System.Drawing.Size(224, 21);
@@ -299,7 +301,7 @@ namespace SpriteSheetPacker
 			// 
 			this.squareCheckBox.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
 			this.squareCheckBox.AutoSize = true;
-			this.squareCheckBox.Location = new System.Drawing.Point(15, 393);
+			this.squareCheckBox.Location = new System.Drawing.Point(15, 473);
 			this.squareCheckBox.Name = "squareCheckBox";
 			this.squareCheckBox.RightToLeft = System.Windows.Forms.RightToLeft.No;
 			this.squareCheckBox.Size = new System.Drawing.Size(185, 21);
@@ -311,16 +313,16 @@ namespace SpriteSheetPacker
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(721, 443);
+			this.ClientSize = new System.Drawing.Size(721, 523);
 			this.Controls.Add(this.squareCheckBox);
 			this.Controls.Add(this.powOf2CheckBox);
-			this.Controls.Add(this.browseTextBtn);
+			this.Controls.Add(this.browseMapBtn);
 			this.Controls.Add(this.browseImageBtn);
 			this.Controls.Add(this.maxHeightTxtBox);
 			this.Controls.Add(this.label4);
 			this.Controls.Add(this.label3);
 			this.Controls.Add(this.maxWidthTxtBox);
-			this.Controls.Add(this.textFileTxtBox);
+			this.Controls.Add(this.mapFileTxtBox);
 			this.Controls.Add(this.label2);
 			this.Controls.Add(this.label6);
 			this.Controls.Add(this.imageFileTxtBox);
@@ -359,10 +361,10 @@ namespace SpriteSheetPacker
 		private System.Windows.Forms.TextBox imageFileTxtBox;
 		private System.Windows.Forms.Button browseImageBtn;
 		private System.Windows.Forms.Label label6;
-		private System.Windows.Forms.TextBox textFileTxtBox;
-		private System.Windows.Forms.Button browseTextBtn;
+		private System.Windows.Forms.TextBox mapFileTxtBox;
+		private System.Windows.Forms.Button browseMapBtn;
 		private System.Windows.Forms.SaveFileDialog imageSaveFileDialog;
-		private System.Windows.Forms.SaveFileDialog textSaveFileDialog;
+		private System.Windows.Forms.SaveFileDialog mapSaveFileDialog;
 		private System.Windows.Forms.CheckBox powOf2CheckBox;
 		private System.Windows.Forms.CheckBox squareCheckBox;
 	}

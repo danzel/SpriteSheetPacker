@@ -40,7 +40,7 @@ namespace SpriteSheetPacker
 	///     http://www.csc.liv.ac.uk/~epa/surveyhtml.html
 	///   </para>
 	/// </remarks>
-	public abstract class RectanglePacker
+	internal abstract class RectanglePacker
 	{
 		/// <summary>Maximum width the packing area is allowed to have</summary>
 		protected int PackingAreaWidth { get; private set; }

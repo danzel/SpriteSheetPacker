@@ -74,7 +74,7 @@ namespace SpriteSheetPacker
 	///     to post them on http://www.flipcode.com
 	///   </para>
 	/// </remarks>
-	public class ArevaloRectanglePacker : RectanglePacker
+	internal class ArevaloRectanglePacker : RectanglePacker
 	{
 		#region class AnchorRankComparer
 
@@ -139,7 +139,7 @@ namespace SpriteSheetPacker
 			// Try to find an anchor where the rectangle fits in, enlarging the packing
 			// area and repeating the search recursively until it fits or the
 			// maximum allowed size is exceeded.
-			int anchorIndex = selectAnchorRecursive(rectangleWidth, rectangleHeight, actualPackingAreaWidth, actualPackingAreaHeight);
+			int anchorIndex = SelectAnchorRecursive(rectangleWidth, rectangleHeight, actualPackingAreaWidth, actualPackingAreaHeight);
 
 			// No anchor could be found at which the rectangle did fit in
 			if (anchorIndex == -1)
@@ -154,7 +154,7 @@ namespace SpriteSheetPacker
 			// a neightbouring rectangle. This is done to combat the effect of lining up
 			// rectangles with gaps to the left or top of them because the anchor that
 			// would allow placement there has been blocked by another rectangle
-			optimizePlacement(ref placement, rectangleWidth, rectangleHeight);
+			OptimizePlacement(ref placement, rectangleWidth, rectangleHeight);
 
 			// Remove the used anchor and add new anchors at the upper right and lower left
 			// positions of the new rectangle
@@ -168,8 +168,8 @@ namespace SpriteSheetPacker
 				anchors.RemoveAt(anchorIndex);
 
 			// Add new anchors at the upper right and lower left coordinates of the rectangle
-			insertAnchor(new Point(placement.X + rectangleWidth, placement.Y));
-			insertAnchor(new Point(placement.X, placement.Y + rectangleHeight));
+			InsertAnchor(new Point(placement.X + rectangleWidth, placement.Y));
+			InsertAnchor(new Point(placement.X, placement.Y + rectangleHeight));
 
 			// Finally, we can add the rectangle to our packed rectangles list
 			packedRectangles.Add(new Rectangle(placement.X, placement.Y, rectangleWidth, rectangleHeight));
@@ -185,13 +185,13 @@ namespace SpriteSheetPacker
 		/// <param name="placement">Placement to be optimized</param>
 		/// <param name="rectangleWidth">Width of the rectangle to be optimized</param>
 		/// <param name="rectangleHeight">Height of the rectangle to be optimized</param>
-		private void optimizePlacement(ref Point placement, int rectangleWidth, int rectangleHeight)
+		private void OptimizePlacement(ref Point placement, int rectangleWidth, int rectangleHeight)
 		{
 			var rectangle = new Rectangle(placement.X, placement.Y, rectangleWidth, rectangleHeight);
 
 			// Try to move the rectangle to the left as far as possible
 			int leftMost = placement.X;
-			while (isFree(ref rectangle, PackingAreaWidth, PackingAreaHeight))
+			while (IsFree(ref rectangle, PackingAreaWidth, PackingAreaHeight))
 			{
 				leftMost = rectangle.X;
 				--rectangle.X;
@@ -202,7 +202,7 @@ namespace SpriteSheetPacker
 
 			// Try to move the rectangle upwards as far as possible
 			int topMost = placement.Y;
-			while (isFree(ref rectangle, PackingAreaWidth, PackingAreaHeight))
+			while (IsFree(ref rectangle, PackingAreaWidth, PackingAreaHeight))
 			{
 				topMost = rectangle.Y;
 				--rectangle.Y;
@@ -227,10 +227,10 @@ namespace SpriteSheetPacker
 		///   Index of the anchor the rectangle is to be placed at or -1 if the rectangle
 		///   does not fit in the packing area anymore.
 		/// </returns>
-		private int selectAnchorRecursive(int rectangleWidth, int rectangleHeight, int testedPackingAreaWidth, int testedPackingAreaHeight)
+		private int SelectAnchorRecursive(int rectangleWidth, int rectangleHeight, int testedPackingAreaWidth, int testedPackingAreaHeight)
 		{
 			// Try to locate an anchor point where the rectangle fits in
-			int freeAnchorIndex = findFirstFreeAnchor(rectangleWidth, rectangleHeight, testedPackingAreaWidth, testedPackingAreaHeight);
+			int freeAnchorIndex = FindFirstFreeAnchor(rectangleWidth, rectangleHeight, testedPackingAreaWidth, testedPackingAreaHeight);
 
 			// If a the rectangle fits without resizing packing area (any further in case
 			// of a recursive call), take over the new packing area size and return the
@@ -260,12 +260,12 @@ namespace SpriteSheetPacker
 			if (canEnlargeHeight && shouldEnlargeHeight)
 			{
 				// Try to double the height of the packing area
-				return selectAnchorRecursive(rectangleWidth, rectangleHeight, testedPackingAreaWidth, Math.Min(testedPackingAreaHeight*2, PackingAreaHeight));
+				return SelectAnchorRecursive(rectangleWidth, rectangleHeight, testedPackingAreaWidth, Math.Min(testedPackingAreaHeight*2, PackingAreaHeight));
 			}
 			if (canEnlargeWidth)
 			{
 				// Try to double the width of the packing area
-				return selectAnchorRecursive(rectangleWidth, rectangleHeight, Math.Min(testedPackingAreaWidth*2, PackingAreaWidth), testedPackingAreaHeight);
+				return SelectAnchorRecursive(rectangleWidth, rectangleHeight, Math.Min(testedPackingAreaWidth*2, PackingAreaWidth), testedPackingAreaHeight);
 			}
 
 			// Both dimensions are at their maximum sizes and the rectangle still
@@ -279,7 +279,7 @@ namespace SpriteSheetPacker
 		/// <param name="testedPackingAreaWidth">Total width of the packing area</param>
 		/// <param name="testedPackingAreaHeight">Total height of the packing area</param>
 		/// <returns>The index of the first free anchor or -1 if none is found</returns>
-		private int findFirstFreeAnchor(int rectangleWidth, int rectangleHeight, int testedPackingAreaWidth, int testedPackingAreaHeight)
+		private int FindFirstFreeAnchor(int rectangleWidth, int rectangleHeight, int testedPackingAreaWidth, int testedPackingAreaHeight)
 		{
 			var potentialLocation = new Rectangle(0, 0, rectangleWidth, rectangleHeight);
 
@@ -292,7 +292,7 @@ namespace SpriteSheetPacker
 				potentialLocation.Y = anchors[index].Y;
 
 				// See if the rectangle would fit in at this anchor point
-				if (isFree(ref potentialLocation, testedPackingAreaWidth, testedPackingAreaHeight))
+				if (IsFree(ref potentialLocation, testedPackingAreaWidth, testedPackingAreaHeight))
 					return index;
 			}
 
@@ -308,7 +308,7 @@ namespace SpriteSheetPacker
 		/// <param name="testedPackingAreaWidth">Total width of the packing area</param>
 		/// <param name="testedPackingAreaHeight">Total height of the packing area</param>
 		/// <returns>True if the rectangle can be placed at its current position</returns>
-		private bool isFree(ref Rectangle rectangle, int testedPackingAreaWidth, int testedPackingAreaHeight)
+		private bool IsFree(ref Rectangle rectangle, int testedPackingAreaWidth, int testedPackingAreaHeight)
 		{
 			// If the rectangle is partially or completely outside of the packing
 			// area, it can't be placed at its current location
@@ -336,7 +336,7 @@ namespace SpriteSheetPacker
 		///   This method tries to keep the anchor list ordered by ranking the anchors
 		///   depending on the distance from the top left corner in the packing area.
 		/// </remarks>
-		private void insertAnchor(Point anchor)
+		private void InsertAnchor(Point anchor)
 		{
 			// Find out where to insert the new anchor based on its rank (which is
 			// calculated based on the anchor's distance to the top left corner of

@@ -26,31 +26,41 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.Composition;
 using System.Diagnostics;
 using System.Drawing;
-using System.Drawing.Imaging;
 using System.IO;
 using System.Threading;
 using System.Windows.Forms;
+using SpriteSheetPacker.Extensibility;
 
 namespace SpriteSheetPacker
 {
-	public partial class SpriteSheetPackerForm : Form
+	internal partial class SpriteSheetPackerForm : Form
 	{
 		private static readonly Stopwatch stopWatch = new Stopwatch();
+		private static readonly ImagePacker imagePacker = new ImagePacker();
 
 		// our default maximum sprite sheet size
 		private const int defaultMaximumSheetWidth = 4096;
 		private const int defaultMaximumSheetHeight = 4096;
 
 		// our default image padding
-		private const int defaultImagePadding = 0;
-
-		// the valid extensions for images
-		private static readonly string[] imageExtensions = new[] { "png", "jpg", "bmp", "gif" };
+		private const int defaultImagePadding = 1;
 
 		// a list of the files we'll build into our sprite sheet
 		private readonly List<string> files = new List<string>();
+
+		// a list of available image and map exporters
+		[ImportMany(AllowRecomposition = true)]
+		public List<IImageExporter> ImageExporters = new List<IImageExporter>();
+
+		[ImportMany(AllowRecomposition = true)]
+		public List<IMapExporter> MapExporters = new List<IMapExporter>();
+
+		// the current image and map exporters
+		private IImageExporter currentImageExporter;
+		private IMapExporter currentMapExporter;
 
 		// did our build succeed
 		private bool success;
@@ -61,7 +71,7 @@ namespace SpriteSheetPacker
 
 			// set our open file dialog filter based on the valid extensions
 			imageOpenFileDialog.Filter = "Image Files|";
-			foreach (var ext in imageExtensions) 
+			foreach (var ext in MiscHelper.AllowedImageExtensions) 
 				imageOpenFileDialog.Filter += string.Format("*.{0};", ext);
 
 			// set the UI values to our defaults
@@ -70,34 +80,29 @@ namespace SpriteSheetPacker
 			paddingTxtBox.Text = defaultImagePadding.ToString();
 		}
 
-		// determines if a file is an image we accept
-		private static bool IsImageFile(string file)
+		// configures our image save dialog to take into account all loaded image exporters
+		public void GenerateImageSaveDialog()
 		{
-			// ToLower for string comparisons
-			string fileLower = file.ToLower();
+			string filter = "";
+			foreach (var exporter in ImageExporters)
+				filter += string.Format("{0} Files|*.{1}|", exporter.Extension.ToUpper(), exporter.Extension);
+			filter = filter.Remove(filter.Length - 1);
 
-			// see if the file ends with one of our valid extensions
-			foreach (var ext in imageExtensions)
-				if (fileLower.EndsWith(ext))
-					return true;
-			return false;
+			imageSaveFileDialog.Filter = filter;
 		}
 
-		// determines if a directory contains an image we can accept
-		private static bool DirectoryContainsImages(string directory)
+		// configures our map save dialog to take into account all loaded map exporters
+		public void GenerateMapSaveDialog()
 		{
-			foreach (var file in Directory.GetFiles(directory, "*", SearchOption.AllDirectories))
-			{
-				if (IsImageFile(file))
-				{
-					return true;
-				}
-			}
+			string filter = "";
+			foreach (var exporter in MapExporters)
+				filter += string.Format("{0} Files|*.{1}|", exporter.Extension.ToUpper(), exporter.Extension);
+			filter = filter.Remove(filter.Length - 1);
 
-			return false;
+			mapSaveFileDialog.Filter = filter;
 		}
 
-		private void AddFiles(IEnumerable<string> paths)
+        private void AddFiles(IEnumerable<string> paths)
 		{
 			foreach (var path in paths)
 			{
@@ -109,7 +114,7 @@ namespace SpriteSheetPacker
 				}
 
 				// make sure the file is an image
-				if (!IsImageFile(path))
+				if (!MiscHelper.IsImageFile(path))
 					continue;
 
 				// prevent duplicates
@@ -133,14 +138,14 @@ namespace SpriteSheetPacker
 			foreach (var f in (string[])e.Data.GetData(DataFormats.FileDrop))
 			{
 				// if the path is a directory and it contains images...
-				if (Directory.Exists(f) && DirectoryContainsImages(f))
+				if (Directory.Exists(f) && MiscHelper.DirectoryContainsImages(f))
 				{
 					imageFound = true;
 					break;
 				}
 
 				// or if the path itself is an image
-				if (IsImageFile(f))
+				if (MiscHelper.IsImageFile(f))
 				{
 					imageFound = true;
 					break;
@@ -189,26 +194,58 @@ namespace SpriteSheetPacker
 		private void browseImageBtn_Click(object sender, EventArgs e)
 		{
 			// show the file dialog
+			imageSaveFileDialog.FileName = imageFileTxtBox.Text;
 			if (imageSaveFileDialog.ShowDialog() == DialogResult.OK)
 			{
 				// store the image path
 				imageFileTxtBox.Text = imageSaveFileDialog.FileName;
 
-				// make a path with the same name as the image but with the txt extension
-				textFileTxtBox.Text = imageSaveFileDialog.FileName.Remove(imageSaveFileDialog.FileName.Length - 3) + "txt";
+				// figure out which image exporter to use based on the extension
+				foreach (var exporter in ImageExporters)
+				{
+					if (exporter.Extension.Equals(Path.GetExtension(imageSaveFileDialog.FileName).Substring(1), StringComparison.InvariantCultureIgnoreCase))
+					{
+						currentImageExporter = exporter;
+						break;
+					}
+				}
+				
+				// if there is no selected map exporter, default to the first map exporter
+				if (currentMapExporter == null)
+				{
+					currentMapExporter = MapExporters[0];
+				}
+				
+				mapFileTxtBox.Text = imageSaveFileDialog.FileName.Remove(imageSaveFileDialog.FileName.Length - 3) + currentMapExporter.Extension.ToLower();
 			}
 		}
 
-		private void browseTextBtn_Click(object sender, EventArgs e)
+		private void browseMapBtn_Click(object sender, EventArgs e)
 		{
 			// show the file dialog
-			if (textSaveFileDialog.ShowDialog() == DialogResult.OK)
+			mapSaveFileDialog.FileName = mapFileTxtBox.Text;
+			if (mapSaveFileDialog.ShowDialog() == DialogResult.OK)
 			{
-				// store the text file path
-				textFileTxtBox.Text = textSaveFileDialog.FileName;
+				// store the file path
+				mapFileTxtBox.Text = mapSaveFileDialog.FileName;
 
-				// make a path with the same name as the text file but with the png extension
-				imageFileTxtBox.Text = textSaveFileDialog.FileName.Remove(textSaveFileDialog.FileName.Length - 3) + "png";
+				// figure out which map exporter to use based on the extension
+				foreach (var exporter in MapExporters)
+				{
+					if (exporter.Extension.Equals(Path.GetExtension(mapSaveFileDialog.FileName).Substring(1), StringComparison.InvariantCultureIgnoreCase))
+					{
+						currentMapExporter = exporter;
+						break;
+					}
+				}
+
+				// if there is no selected image exporter, default to the first image exporter
+				if (currentImageExporter == null)
+				{
+					currentImageExporter = ImageExporters[0];
+				}
+
+				imageFileTxtBox.Text = mapSaveFileDialog.FileName.Remove(mapSaveFileDialog.FileName.Length - 3) + currentImageExporter.Extension.ToLower();
 			}
 		}
 
@@ -225,7 +262,7 @@ namespace SpriteSheetPacker
 				ShowBuildError("No image filename given.");
 				return;
 			}
-			if (string.IsNullOrEmpty(textFileTxtBox.Text))
+			if (string.IsNullOrEmpty(mapFileTxtBox.Text))
 			{
 				ShowBuildError("No text filename given.");
 				return;
@@ -293,258 +330,33 @@ namespace SpriteSheetPacker
 			int outputHeight = int.Parse(maxHeightTxtBox.Text);
 			int padding = int.Parse(paddingTxtBox.Text);
 
-			// some dictionaries to hold the image sizes and destination rectangles
-			Dictionary<string, Size> imageSizes = new Dictionary<string, Size>();
-			Dictionary<string, Rectangle> imagePlacement = new Dictionary<string, Rectangle>();
-
-			// get the sizes of all the images
-			foreach (var image in files)
+			// generate our output
+			Bitmap outputImage;
+			Dictionary<string, Rectangle> outputMap;
+			if (!imagePacker.PackImage(files, powOf2CheckBox.Checked, squareCheckBox.Checked, outputWidth, outputHeight, padding, out outputImage, out outputMap))
 			{
-				Bitmap bitmap = Bitmap.FromFile(image) as Bitmap;
-				if (bitmap == null)
-				{
-					ShowBuildError("Could not load " + image + ".");
-					return false;
-				}
-				imageSizes.Add(image, bitmap.Size);
+				ShowBuildError("There was an error making the image sheet.");
+				return false;
 			}
 
-			// sort our files by file size so we place large sprites first
-			files.Sort(
-				(f1, f2) =>
-				{
-					Size b1 = imageSizes[f1];
-					Size b2 = imageSizes[f2];
-
-					int c = -b1.Width.CompareTo(b2.Width);
-					if (c != 0)
-						return c;
-
-					return -b1.Height.CompareTo(b2.Height);
-				});
-
-			// try to pack the images
-			if (!PackImageRectangles(imageSizes, ref outputWidth, ref outputHeight, padding, imagePlacement))
-				return false;
-
-			// create the output image
-			if (!CreateOutputImage(outputWidth, outputHeight, imagePlacement))
-				return false;
-
-			// open a stream writer for the text file
-			if (!WriteTextFile(imageSizes, imagePlacement))
-				return false;
-
-			return true;
-		}
-
-		// This method does some trickery type stuff where we perform the TestPackingImages method over and over, 
-		// trying to reduce the image size until we have found the smallest possible image we can fit.
-		private bool PackImageRectangles(Dictionary<string, Size> imageSizes, ref int outputWidth, ref int outputHeight, int padding, Dictionary<string, Rectangle> imagePlacement)
-		{
-			// create a dictionary for our test image placements
-			Dictionary<string, Rectangle> testImagePlacement = new Dictionary<string, Rectangle>();
-
-			// get the size of our smallest image
-			int smallestWidth = int.MaxValue;
-			int smallestHeight = int.MaxValue;
-			foreach (var size in imageSizes)
+			// try to save using our exporters
+			try
 			{
-				smallestWidth = Math.Min(smallestWidth, size.Value.Width);
-				smallestHeight = Math.Min(smallestHeight, size.Value.Height);
+				currentImageExporter.Save(imageFileTxtBox.Text, outputImage);
+				currentMapExporter.Save(mapFileTxtBox.Text, outputMap);
 			}
-
-			// we need a couple values for testing
-			int testWidth = outputWidth;
-			int testHeight = outputHeight;
-
-			bool shrinkVertical = false;
-
-			// just keep looping...
-			while (true)
+			catch (Exception e)
 			{
-				// make sure our test dictionary is empty
-				testImagePlacement.Clear();
-
-				// try to pack the images into our current test size
-				if (!TestPackingImages(imageSizes, testWidth, testHeight, padding, testImagePlacement))
-				{
-					// if that failed...
-
-					// if we have no images in imagePlacement, i.e. we've never succeeded at PackImages,
-					// show an error and return false since there is no way to fit the images into our
-					// maximum size texture
-					if (imagePlacement.Count == 0)
-					{
-						ShowBuildError("Output image not large enough to fit all images.");
-						return false;
-					}
-
-					// otherwise return true to use our last good results
-					if (shrinkVertical)
-						return true;
-
-					shrinkVertical = true;
-					testWidth += smallestWidth + padding + padding;
-					testHeight += smallestHeight + padding + padding;
-					continue;
-				}
-
-				// clear the imagePlacement dictionary and add our test results in
-				imagePlacement.Clear();
-				foreach (var pair in testImagePlacement)
-					imagePlacement.Add(pair.Key, pair.Value);
-                
-				// figure out the smallest bitmap that will hold all the images
-				testWidth = testHeight = 0;
-				foreach (var pair in imagePlacement)
-				{
-					testWidth = Math.Max(testWidth, pair.Value.Right);
-					testHeight = Math.Max(testHeight, pair.Value.Bottom);
-				}
-
-				// subtract the extra padding on the right and bottom
-				if (!shrinkVertical)
-					testWidth -= padding;
-				testHeight -= padding;
-
-				// if we require a power of two texture, find the next power of two that can fit this image
-				if (powOf2CheckBox.Checked)
-				{
-					testWidth = FindNextPowerOfTwo(testWidth);
-					testHeight = FindNextPowerOfTwo(testHeight);
-				}
-
-				// if we require a square texture, set the width and height to the larger of the two
-				if (squareCheckBox.Checked)
-				{
-					int max = Math.Max(testWidth, testHeight);
-					testWidth = testHeight = max;
-				}
-
-				// if the test results are the same as our last output results, we've reached an optimal size,
-				// so we can just be done
-				if (testWidth == outputWidth && testHeight == outputHeight)
-				{
-					if (shrinkVertical)
-						return true;
-
-					shrinkVertical = true;
-				}
-
-				// save the test results as our last known good results
-				outputWidth = testWidth;
-				outputHeight = testHeight;
-
-				// subtract the smallest image size out for the next test iteration
-				if (!shrinkVertical)
-					testWidth -= smallestWidth;
-				testHeight -= smallestHeight;
-			}
-		}
-
-		private bool TestPackingImages(Dictionary<string, Size> imageSizes, int testWidth, int testHeight, int padding, Dictionary<string, Rectangle> imagePlacements)
-		{
-			// create the rectangle packer
-			ArevaloRectanglePacker rectanglePacker = new ArevaloRectanglePacker(testWidth, testHeight);
-
-			foreach (var image in files)
-			{
-				// get the bitmap for this file
-				Size size = imageSizes[image];
-
-				// pack the image
-				Point origin;
-				if (!rectanglePacker.TryPack(size.Width + padding, size.Height + padding, out origin))
-				{
-					return false;
-				}
-
-				// add the destination rectangle to our dictionary
-				imagePlacements.Add(image, new Rectangle(origin.X, origin.Y, size.Width + padding, size.Height + padding));
+				ShowBuildError("Error exporting files: " + e.Message);
+				return false;
 			}
 
 			return true;
-		}
-
-		private bool CreateOutputImage(int outputWidth, int outputHeight, Dictionary<string, Rectangle> imagePlacement)
-		{
-			try
-			{
-				Bitmap outputImage = new Bitmap(outputWidth, outputHeight, PixelFormat.Format32bppArgb);
-
-				// draw all the images into the output image
-				foreach (var image in files)
-				{
-					Rectangle location = imagePlacement[image];
-					Bitmap bitmap = Bitmap.FromFile(image) as Bitmap;
-					if (bitmap == null)
-					{
-						ShowBuildError("Could not load " + image + ".");
-						return false;
-					}
-
-					// copy pixels over to avoid antialiasing or any other side effects of drawing
-					// the subimages to the output image using Graphics
-					for (int x = 0; x < bitmap.Width; x++)
-						for (int y = 0; y < bitmap.Height; y++)
-							outputImage.SetPixel(location.X + x, location.Y + y, bitmap.GetPixel(x, y));
-				}
-
-				// save the image as a PNG
-				outputImage.Save(imageFileTxtBox.Text, ImageFormat.Png);
-
-				return true;
-			}
-			catch
-			{
-				ShowBuildError("There was an error building the sprite sheet image.");
-				return false;
-			}
-		}
-
-		private bool WriteTextFile(Dictionary<string, Size> imageSizes, Dictionary<string, Rectangle> imagePlacement)
-		{
-			try
-			{
-				using (StreamWriter writer = new StreamWriter(textFileTxtBox.Text))
-				{
-					// copy the files list and sort alphabetically
-					List<string> outputFiles = new List<string>(files);
-					outputFiles.Sort();
-
-					foreach (var image in outputFiles)
-					{
-						// get the bitmap and destination
-						Size imageSize = imageSizes[image];
-						Rectangle destination = imagePlacement[image];
-
-						// write out the destination rectangle for this bitmap
-						writer.WriteLine(string.Format("{0} = {1} {2} {3} {4}", Path.GetFileNameWithoutExtension(image), destination.X, destination.Y, imageSize.Width, imageSize.Height));
-					}
-				}
-
-				return true;
-			}
-			catch
-			{
-				ShowBuildError("There was an error building the sprite sheet text file.");
-				return false;
-			}
 		}
 
 		private static void ShowBuildError(string error)
 		{
-			MessageBox.Show(error, "Build Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-		}
-
-		// stolen from http://en.wikipedia.org/wiki/Power_of_two#Algorithm_to_find_the_next-highest_power_of_two
-		private static int FindNextPowerOfTwo(int k)
-		{
-			k--;
-			for (int i = 1; i < sizeof(int) * 8; i <<= 1)
-				k = k | k >> i;
-			return k + 1;
+			MessageBox.Show(error, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
 		}
 	}
 }
