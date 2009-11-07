@@ -83,21 +83,42 @@ namespace SpriteSheetPacker
 			return false;
 		}
 
-		private void AddFiles(IEnumerable<string> f)
+		// determines if a directory contains an image we can accept
+		private static bool DirectoryContainsImages(string directory)
 		{
-			foreach (var file in f)
+			foreach (var file in Directory.GetFiles(directory, "*", SearchOption.AllDirectories))
 			{
+				if (IsImageFile(file))
+				{
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+		private void AddFiles(IEnumerable<string> paths)
+		{
+			foreach (var path in paths)
+			{
+				// if the path is a directory, add all files inside the directory
+				if (Directory.Exists(path))
+				{
+					AddFiles(Directory.GetFiles(path, "*", SearchOption.AllDirectories));
+					continue;
+				}
+
 				// make sure the file is an image
-				if (!IsImageFile(file))
+				if (!IsImageFile(path))
 					continue;
 
 				// prevent duplicates
-				if (files.Contains(file)) 
+				if (files.Contains(path)) 
 					continue;
 
 				// add to both our internal list and the list box
-				files.Add(file);
-				listBox1.Items.Add(file);
+				files.Add(path);
+				listBox1.Items.Add(path);
 			}
 		}
 
@@ -107,19 +128,27 @@ namespace SpriteSheetPacker
 			if (!e.Data.GetDataPresent(DataFormats.FileDrop)) 
 				return;
 
-			// figure out if all the files being dropped are images
-			bool allImages = true;
+			// figure out if any the files being dropped are images
+			bool imageFound = false;
 			foreach (var f in (string[])e.Data.GetData(DataFormats.FileDrop))
 			{
-				if (!IsImageFile(f))
+				// if the path is a directory and it contains images...
+				if (Directory.Exists(f) && DirectoryContainsImages(f))
 				{
-					allImages = false;
+					imageFound = true;
+					break;
+				}
+
+				// or if the path itself is an image
+				if (IsImageFile(f))
+				{
+					imageFound = true;
 					break;
 				}
 			}
 
-			// if all the files are images, we're going to "copy" them. otherwise, we don't accept them.
-			e.Effect = allImages ? DragDropEffects.Copy : DragDropEffects.None;
+			// if an image is being added, we're going to copy them. otherwise, we don't accept them.
+			e.Effect = imageFound ? DragDropEffects.Copy : DragDropEffects.None;
 		}
 
 		private void listBox1_DragDrop(object sender, DragEventArgs e)
@@ -165,9 +194,8 @@ namespace SpriteSheetPacker
 				// store the image path
 				imageFileTxtBox.Text = imageSaveFileDialog.FileName;
 
-				// if no text path is chosen, make a path with the same name as the image but with the txt extension
-				if (string.IsNullOrEmpty(textFileTxtBox.Text))
-					textFileTxtBox.Text = imageSaveFileDialog.FileName.Remove(imageSaveFileDialog.FileName.Length - 3) + "txt";
+				// make a path with the same name as the image but with the txt extension
+				textFileTxtBox.Text = imageSaveFileDialog.FileName.Remove(imageSaveFileDialog.FileName.Length - 3) + "txt";
 			}
 		}
 
@@ -179,9 +207,8 @@ namespace SpriteSheetPacker
 				// store the text file path
 				textFileTxtBox.Text = textSaveFileDialog.FileName;
 
-				// if no image path is chosen, make a path with the same name as the text file but with the png extension
-				if (string.IsNullOrEmpty(imageFileTxtBox.Text))
-					imageFileTxtBox.Text = textSaveFileDialog.FileName.Remove(textSaveFileDialog.FileName.Length - 3) + "png";
+				// make a path with the same name as the text file but with the png extension
+				imageFileTxtBox.Text = textSaveFileDialog.FileName.Remove(textSaveFileDialog.FileName.Length - 3) + "png";
 			}
 		}
 
@@ -319,11 +346,19 @@ namespace SpriteSheetPacker
 			Dictionary<string, Rectangle> testImagePlacement = new Dictionary<string, Rectangle>();
 
 			// get the size of our smallest image
-			Size smallestImage = imageSizes[files[files.Count - 1]];
+			int smallestWidth = int.MaxValue;
+			int smallestHeight = int.MaxValue;
+			foreach (var size in imageSizes)
+			{
+				smallestWidth = Math.Min(smallestWidth, size.Value.Width);
+				smallestHeight = Math.Min(smallestHeight, size.Value.Height);
+			}
 
 			// we need a couple values for testing
 			int testWidth = outputWidth;
 			int testHeight = outputHeight;
+
+			bool shrinkVertical = false;
 
 			// just keep looping...
 			while (true)
@@ -346,7 +381,13 @@ namespace SpriteSheetPacker
 					}
 
 					// otherwise return true to use our last good results
-					return true;
+					if (shrinkVertical)
+						return true;
+
+					shrinkVertical = true;
+					testWidth += smallestWidth + padding + padding;
+					testHeight += smallestHeight + padding + padding;
+					continue;
 				}
 
 				// clear the imagePlacement dictionary and add our test results in
@@ -363,7 +404,8 @@ namespace SpriteSheetPacker
 				}
 
 				// subtract the extra padding on the right and bottom
-				testWidth -= padding;
+				if (!shrinkVertical)
+					testWidth -= padding;
 				testHeight -= padding;
 
 				// if we require a power of two texture, find the next power of two that can fit this image
@@ -383,15 +425,21 @@ namespace SpriteSheetPacker
 				// if the test results are the same as our last output results, we've reached an optimal size,
 				// so we can just be done
 				if (testWidth == outputWidth && testHeight == outputHeight)
-					return true;
+				{
+					if (shrinkVertical)
+						return true;
+
+					shrinkVertical = true;
+				}
 
 				// save the test results as our last known good results
 				outputWidth = testWidth;
 				outputHeight = testHeight;
 
 				// subtract the smallest image size out for the next test iteration
-				testWidth -= smallestImage.Width;
-				testHeight -= smallestImage.Height;
+				if (!shrinkVertical)
+					testWidth -= smallestWidth;
+				testHeight -= smallestHeight;
 			}
 		}
 
