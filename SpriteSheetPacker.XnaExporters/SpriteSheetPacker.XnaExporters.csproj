@@ -32,10 +32,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
-    <Reference Include="System.ComponentModel.Composition, Version=2009.22.10.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\System.ComponentModel.Composition.dll</HintPath>
-    </Reference>
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
@@ -54,9 +50,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\SpriteSheetPacker\SpriteSheetPacker.csproj">
-      <Project>{43886759-9276-4097-8892-2D33AB56D6E6}</Project>
-      <Name>SpriteSheetPacker</Name>
+    <ProjectReference Include="..\sspack\sspack.csproj">
+      <Project>{1AC0A15F-98D2-477D-A620-A8F7B79935F4}</Project>
+      <Name>sspack</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

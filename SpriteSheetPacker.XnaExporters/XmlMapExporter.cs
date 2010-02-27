@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using System.ComponentModel.Composition;
-using System.Drawing;
-#region MIT License
+﻿#region MIT License
 
 /*
  * Copyright (c) 2009 Nick Gravelyn (nick@gravelyn.com), Markus Ewald (cygon@nuclex.org)
@@ -27,17 +24,17 @@ using System.Drawing;
 
 #endregion
 
+using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
-using SpriteSheetPacker.Extensibility;
 
 namespace SpriteSheetPacker.XnaExporters
 {
 	// writes out an XML file ready to be put into a XNA Content project and get compiled as content.
 	// this file can be loaded using Content.Load<Dictionary<string, Rectangle>> from inside the game.
-	[Export(typeof(IMapExporter))]
-	public class XmlMapExporter : IMapExporter
+	public class XmlMapExporter : sspack.IMapExporter
 	{
-		public string Extension
+		public string MapExtension
 		{
 			get { return "xml"; }
 		}

@@ -26,44 +26,29 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.Composition;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Threading;
 using System.Windows.Forms;
-using SpriteSheetPacker.Extensibility;
 
 namespace SpriteSheetPacker
 {
 	internal partial class SpriteSheetPackerForm : Form
 	{
 		private static readonly Stopwatch stopWatch = new Stopwatch();
-		private static readonly ImagePacker imagePacker = new ImagePacker();
 
-		// our default maximum sprite sheet size
-		private const int defaultMaximumSheetWidth = 4096;
-		private const int defaultMaximumSheetHeight = 4096;
-
-		// our default image padding
-		private const int defaultImagePadding = 1;
+		private sspack.IImageExporter currentImageExporter;
+		private sspack.IMapExporter currentMapExporter;
 
 		// a list of the files we'll build into our sprite sheet
 		private readonly List<string> files = new List<string>();
 
-		// a list of available image and map exporters
-		[ImportMany(AllowRecomposition = true)]
-		public List<IImageExporter> ImageExporters = new List<IImageExporter>();
-
-		[ImportMany(AllowRecomposition = true)]
-		public List<IMapExporter> MapExporters = new List<IMapExporter>();
-
-		// the current image and map exporters
-		private IImageExporter currentImageExporter;
-		private IMapExporter currentMapExporter;
-
 		// did our build succeed
 		private bool success;
+
+		// our build process
+		private Process buildProcess;
 
 		public SpriteSheetPackerForm()
 		{
@@ -71,21 +56,28 @@ namespace SpriteSheetPacker
 
 			// set our open file dialog filter based on the valid extensions
 			imageOpenFileDialog.Filter = "Image Files|";
-			foreach (var ext in MiscHelper.AllowedImageExtensions) 
+			foreach (var ext in sspack.MiscHelper.AllowedImageExtensions) 
 				imageOpenFileDialog.Filter += string.Format("*.{0};", ext);
 
 			// set the UI values to our defaults
-			maxWidthTxtBox.Text = defaultMaximumSheetWidth.ToString();
-			maxHeightTxtBox.Text = defaultMaximumSheetHeight.ToString();
-			paddingTxtBox.Text = defaultImagePadding.ToString();
+			maxWidthTxtBox.Text = sspack.Constants.DefaultMaximumSheetWidth.ToString();
+			maxHeightTxtBox.Text = sspack.Constants.DefaultMaximumSheetHeight.ToString();
+			paddingTxtBox.Text = sspack.Constants.DefaultImagePadding.ToString();
+		}
+
+		protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
+		{
+			buildProcess.Kill();
+			buildProcess.Dispose();
+			buildProcess = null;
 		}
 
 		// configures our image save dialog to take into account all loaded image exporters
 		public void GenerateImageSaveDialog()
 		{
 			string filter = "";
-			foreach (var exporter in ImageExporters)
-				filter += string.Format("{0} Files|*.{1}|", exporter.Extension.ToUpper(), exporter.Extension);
+			foreach (var exporter in sspack.Exporters.ImageExporters)
+				filter += string.Format("{0} Files|*.{1}|", exporter.ImageExtension.ToUpper(), exporter.ImageExtension);
 			filter = filter.Remove(filter.Length - 1);
 
 			imageSaveFileDialog.Filter = filter;
@@ -95,8 +87,8 @@ namespace SpriteSheetPacker
 		public void GenerateMapSaveDialog()
 		{
 			string filter = "";
-			foreach (var exporter in MapExporters)
-				filter += string.Format("{0} Files|*.{1}|", exporter.Extension.ToUpper(), exporter.Extension);
+			foreach (var exporter in sspack.Exporters.MapExporters)
+				filter += string.Format("{0} Files|*.{1}|", exporter.MapExtension.ToUpper(), exporter.MapExtension);
 			filter = filter.Remove(filter.Length - 1);
 
 			mapSaveFileDialog.Filter = filter;
@@ -114,7 +106,7 @@ namespace SpriteSheetPacker
 				}
 
 				// make sure the file is an image
-				if (!MiscHelper.IsImageFile(path))
+				if (!sspack.MiscHelper.IsImageFile(path))
 					continue;
 
 				// prevent duplicates
@@ -125,6 +117,20 @@ namespace SpriteSheetPacker
 				files.Add(path);
 				listBox1.Items.Add(path);
 			}
+		}
+
+		// determines if a directory contains an image we can accept
+		public static bool DirectoryContainsImages(string directory)
+		{
+			foreach (var file in Directory.GetFiles(directory, "*", SearchOption.AllDirectories))
+			{
+				if (sspack.MiscHelper.IsImageFile(file))
+				{
+					return true;
+				}
+			}
+
+			return false;
 		}
 
 		private void listBox1_DragEnter(object sender, DragEventArgs e)
@@ -138,14 +144,14 @@ namespace SpriteSheetPacker
 			foreach (var f in (string[])e.Data.GetData(DataFormats.FileDrop))
 			{
 				// if the path is a directory and it contains images...
-				if (Directory.Exists(f) && MiscHelper.DirectoryContainsImages(f))
+				if (Directory.Exists(f) && DirectoryContainsImages(f))
 				{
 					imageFound = true;
 					break;
 				}
 
 				// or if the path itself is an image
-				if (MiscHelper.IsImageFile(f))
+				if (sspack.MiscHelper.IsImageFile(f))
 				{
 					imageFound = true;
 					break;
@@ -201,9 +207,9 @@ namespace SpriteSheetPacker
 				imageFileTxtBox.Text = imageSaveFileDialog.FileName;
 
 				// figure out which image exporter to use based on the extension
-				foreach (var exporter in ImageExporters)
+				foreach (var exporter in sspack.Exporters.ImageExporters)
 				{
-					if (exporter.Extension.Equals(Path.GetExtension(imageSaveFileDialog.FileName).Substring(1), StringComparison.InvariantCultureIgnoreCase))
+					if (exporter.ImageExtension.Equals(Path.GetExtension(imageSaveFileDialog.FileName).Substring(1), StringComparison.InvariantCultureIgnoreCase))
 					{
 						currentImageExporter = exporter;
 						break;
@@ -213,10 +219,10 @@ namespace SpriteSheetPacker
 				// if there is no selected map exporter, default to the first map exporter
 				if (currentMapExporter == null)
 				{
-					currentMapExporter = MapExporters[0];
+					currentMapExporter = sspack.Exporters.MapExporters[0];
 				}
 				
-				mapFileTxtBox.Text = imageSaveFileDialog.FileName.Remove(imageSaveFileDialog.FileName.Length - 3) + currentMapExporter.Extension.ToLower();
+				mapFileTxtBox.Text = imageSaveFileDialog.FileName.Remove(imageSaveFileDialog.FileName.Length - 3) + currentMapExporter.MapExtension.ToLower();
 			}
 		}
 
@@ -230,9 +236,9 @@ namespace SpriteSheetPacker
 				mapFileTxtBox.Text = mapSaveFileDialog.FileName;
 
 				// figure out which map exporter to use based on the extension
-				foreach (var exporter in MapExporters)
+				foreach (var exporter in sspack.Exporters.MapExporters)
 				{
-					if (exporter.Extension.Equals(Path.GetExtension(mapSaveFileDialog.FileName).Substring(1), StringComparison.InvariantCultureIgnoreCase))
+					if (exporter.MapExtension.Equals(Path.GetExtension(mapSaveFileDialog.FileName).Substring(1), StringComparison.InvariantCultureIgnoreCase))
 					{
 						currentMapExporter = exporter;
 						break;
@@ -242,10 +248,10 @@ namespace SpriteSheetPacker
 				// if there is no selected image exporter, default to the first image exporter
 				if (currentImageExporter == null)
 				{
-					currentImageExporter = ImageExporters[0];
+					currentImageExporter = sspack.Exporters.ImageExporters[0];
 				}
 
-				imageFileTxtBox.Text = mapSaveFileDialog.FileName.Remove(mapSaveFileDialog.FileName.Length - 3) + currentImageExporter.Extension.ToLower();
+				imageFileTxtBox.Text = mapSaveFileDialog.FileName.Remove(mapSaveFileDialog.FileName.Length - 3) + currentImageExporter.ImageExtension.ToLower();
 			}
 		}
 
@@ -288,18 +294,65 @@ namespace SpriteSheetPacker
 			foreach (Control control in Controls)
 				control.Enabled = false;
 
-			// create a thread to build our sprite sheet and start it
-			Thread buildThread = new Thread(BuildThread) { IsBackground = true };
-
 			stopWatch.Reset();
 			stopWatch.Start();
-
-			buildThread.Start();
+			BuildSpriteSheet();
 		}
 
-		private void BuildThreadComplete()
+		private void BuildSpriteSheet()
 		{
+			// read our values. we check before this thread, so no worries here
+			int mw = int.Parse(maxWidthTxtBox.Text);
+			int mh = int.Parse(maxHeightTxtBox.Text);
+			int pad = int.Parse(paddingTxtBox.Text);
+			bool pow2 = powOf2CheckBox.Checked;
+			bool square = squareCheckBox.Checked;
+			string image = imageFileTxtBox.Text;
+			string map = mapFileTxtBox.Text;
+
+			string fileList = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "SpriteSheetPacker");
+			if (!Directory.Exists(fileList))
+			{
+				Directory.CreateDirectory(fileList);
+			}
+			fileList = Path.Combine(fileList, "FileList.txt");
+
+			using (StreamWriter writer = new StreamWriter(fileList))
+			{
+				foreach (var file in files)
+				{
+					writer.WriteLine(file);
+				}
+			}
+
+			string args = string.Format(
+				" /image:{0} /map:{1} /mw:{2} /mh:{3} /pad:{4} {5} {6} /il:{7}",
+				image,
+				map,
+				mw, 
+				mh, 
+				pad, 
+				pow2 ? "/pow2" : "", 
+				square ? "/sqr" : "", 
+				fileList);
+
+			buildProcess = new Process();
+			buildProcess.StartInfo.FileName = "sspack.exe";
+			buildProcess.StartInfo.Arguments = args;
+			buildProcess.StartInfo.CreateNoWindow = true;
+			buildProcess.StartInfo.UseShellExecute = false;
+
+			buildProcess.Exited += new EventHandler(process_Exited);
+			if (!buildProcess.Start())
+				success = false;
+		}
+
+		void process_Exited(object sender, EventArgs e)
+		{
+			success = buildProcess.ExitCode == 0;
+			buildProcess = null;
 			stopWatch.Stop();
+
 			if (success)
 			{
 #if DEBUG
@@ -312,46 +365,6 @@ namespace SpriteSheetPacker
 			// re-enable all our controls
 			foreach (Control control in Controls)
 				control.Enabled = true;
-		}
-
-		private void BuildThread()
-		{
-			// build our sprite sheet
-			success = BuildSpriteSheet();
-
-			// invoke the complete method to re-enable our controls
-			Invoke(new MethodInvoker(BuildThreadComplete));
-		}
-
-		private bool BuildSpriteSheet()
-		{
-			// read our values. we check before this thread, so no worries here
-			int outputWidth = int.Parse(maxWidthTxtBox.Text);
-			int outputHeight = int.Parse(maxHeightTxtBox.Text);
-			int padding = int.Parse(paddingTxtBox.Text);
-
-			// generate our output
-			Bitmap outputImage;
-			Dictionary<string, Rectangle> outputMap;
-			if (!imagePacker.PackImage(files, powOf2CheckBox.Checked, squareCheckBox.Checked, outputWidth, outputHeight, padding, out outputImage, out outputMap))
-			{
-				ShowBuildError("There was an error making the image sheet.");
-				return false;
-			}
-
-			// try to save using our exporters
-			try
-			{
-				currentImageExporter.Save(imageFileTxtBox.Text, outputImage);
-				currentMapExporter.Save(mapFileTxtBox.Text, outputMap);
-			}
-			catch (Exception e)
-			{
-				ShowBuildError("Error exporting files: " + e.Message);
-				return false;
-			}
-
-			return true;
 		}
 
 		private static void ShowBuildError(string error)
