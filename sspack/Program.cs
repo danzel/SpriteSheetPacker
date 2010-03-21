@@ -157,24 +157,6 @@ namespace sspack
 				{
 					images.Add(str);
 				}
-				else
-				{
-					Match m = Regex.Match(str, @"(.+?)(\*.[a-zA-Z]{3})");
-					if (m.Success)
-					{
-						string dir = m.Groups[1].Value;
-						string filter = m.Groups[2].Value;
-
-						var files = Directory.GetFiles(dir, filter, arguments.r ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly);
-						foreach (var f in files)
-						{
-							if (MiscHelper.IsImageFile(f))
-							{
-								images.Add(f);
-							}
-						}
-					}
-				}
 			}
 		}
 	}
