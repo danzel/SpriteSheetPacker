@@ -86,11 +86,13 @@ namespace SpriteSheetPacker
 						| System.Windows.Forms.AnchorStyles.Left)
 						| System.Windows.Forms.AnchorStyles.Right)));
 			this.listBox1.FormattingEnabled = true;
+			this.listBox1.IntegralHeight = false;
 			this.listBox1.ItemHeight = 16;
 			this.listBox1.Location = new System.Drawing.Point(12, 12);
+			this.listBox1.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
 			this.listBox1.Name = "listBox1";
 			this.listBox1.SelectionMode = System.Windows.Forms.SelectionMode.MultiSimple;
-			this.listBox1.Size = new System.Drawing.Size(697, 260);
+			this.listBox1.Size = new System.Drawing.Size(683, 191);
 			this.listBox1.TabIndex = 0;
 			this.listBox1.TabStop = false;
 			this.listBox1.DragDrop += new System.Windows.Forms.DragEventHandler(this.listBox1_DragDrop);
@@ -99,9 +101,10 @@ namespace SpriteSheetPacker
 			// removeImageBtn
 			// 
 			this.removeImageBtn.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-			this.removeImageBtn.Location = new System.Drawing.Point(479, 294);
+			this.removeImageBtn.Location = new System.Drawing.Point(473, 214);
+			this.removeImageBtn.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
 			this.removeImageBtn.Name = "removeImageBtn";
-			this.removeImageBtn.Size = new System.Drawing.Size(112, 51);
+			this.removeImageBtn.Size = new System.Drawing.Size(112, 50);
 			this.removeImageBtn.TabIndex = 6;
 			this.removeImageBtn.Text = "Remove Selected";
 			this.removeImageBtn.UseVisualStyleBackColor = true;
@@ -110,9 +113,10 @@ namespace SpriteSheetPacker
 			// addImageBtn
 			// 
 			this.addImageBtn.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-			this.addImageBtn.Location = new System.Drawing.Point(361, 294);
+			this.addImageBtn.Location = new System.Drawing.Point(355, 214);
+			this.addImageBtn.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
 			this.addImageBtn.Name = "addImageBtn";
-			this.addImageBtn.Size = new System.Drawing.Size(112, 51);
+			this.addImageBtn.Size = new System.Drawing.Size(112, 50);
 			this.addImageBtn.TabIndex = 5;
 			this.addImageBtn.Text = "Add Images";
 			this.addImageBtn.UseVisualStyleBackColor = true;
@@ -121,9 +125,10 @@ namespace SpriteSheetPacker
 			// buildBtn
 			// 
 			this.buildBtn.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-			this.buildBtn.Location = new System.Drawing.Point(479, 460);
+			this.buildBtn.Location = new System.Drawing.Point(473, 380);
+			this.buildBtn.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
 			this.buildBtn.Name = "buildBtn";
-			this.buildBtn.Size = new System.Drawing.Size(230, 51);
+			this.buildBtn.Size = new System.Drawing.Size(229, 50);
 			this.buildBtn.TabIndex = 12;
 			this.buildBtn.Text = "Build Sprite Sheet";
 			this.buildBtn.UseVisualStyleBackColor = true;
@@ -139,9 +144,10 @@ namespace SpriteSheetPacker
 			// clearBtn
 			// 
 			this.clearBtn.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-			this.clearBtn.Location = new System.Drawing.Point(597, 294);
+			this.clearBtn.Location = new System.Drawing.Point(591, 214);
+			this.clearBtn.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
 			this.clearBtn.Name = "clearBtn";
-			this.clearBtn.Size = new System.Drawing.Size(112, 51);
+			this.clearBtn.Size = new System.Drawing.Size(112, 50);
 			this.clearBtn.TabIndex = 7;
 			this.clearBtn.Text = "Remove All";
 			this.clearBtn.UseVisualStyleBackColor = true;
@@ -151,7 +157,7 @@ namespace SpriteSheetPacker
 			// 
 			this.label1.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
 			this.label1.AutoSize = true;
-			this.label1.Location = new System.Drawing.Point(12, 311);
+			this.label1.Location = new System.Drawing.Point(6, 231);
 			this.label1.Name = "label1";
 			this.label1.Size = new System.Drawing.Size(106, 17);
 			this.label1.TabIndex = 2;
@@ -160,7 +166,8 @@ namespace SpriteSheetPacker
 			// paddingTxtBox
 			// 
 			this.paddingTxtBox.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-			this.paddingTxtBox.Location = new System.Drawing.Point(124, 308);
+			this.paddingTxtBox.Location = new System.Drawing.Point(118, 228);
+			this.paddingTxtBox.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
 			this.paddingTxtBox.Name = "paddingTxtBox";
 			this.paddingTxtBox.Size = new System.Drawing.Size(100, 22);
 			this.paddingTxtBox.TabIndex = 0;
@@ -171,7 +178,7 @@ namespace SpriteSheetPacker
 			// 
 			this.label2.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
 			this.label2.AutoSize = true;
-			this.label2.Location = new System.Drawing.Point(12, 360);
+			this.label2.Location = new System.Drawing.Point(6, 279);
 			this.label2.Name = "label2";
 			this.label2.Size = new System.Drawing.Size(142, 17);
 			this.label2.TabIndex = 2;
@@ -180,7 +187,8 @@ namespace SpriteSheetPacker
 			// maxWidthTxtBox
 			// 
 			this.maxWidthTxtBox.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-			this.maxWidthTxtBox.Location = new System.Drawing.Point(124, 380);
+			this.maxWidthTxtBox.Location = new System.Drawing.Point(118, 300);
+			this.maxWidthTxtBox.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
 			this.maxWidthTxtBox.Name = "maxWidthTxtBox";
 			this.maxWidthTxtBox.Size = new System.Drawing.Size(100, 22);
 			this.maxWidthTxtBox.TabIndex = 1;
@@ -190,7 +198,7 @@ namespace SpriteSheetPacker
 			// 
 			this.label3.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
 			this.label3.AutoSize = true;
-			this.label3.Location = new System.Drawing.Point(70, 383);
+			this.label3.Location = new System.Drawing.Point(63, 303);
 			this.label3.Name = "label3";
 			this.label3.Size = new System.Drawing.Size(48, 17);
 			this.label3.TabIndex = 2;
@@ -199,7 +207,8 @@ namespace SpriteSheetPacker
 			// maxHeightTxtBox
 			// 
 			this.maxHeightTxtBox.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-			this.maxHeightTxtBox.Location = new System.Drawing.Point(124, 408);
+			this.maxHeightTxtBox.Location = new System.Drawing.Point(118, 329);
+			this.maxHeightTxtBox.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
 			this.maxHeightTxtBox.Name = "maxHeightTxtBox";
 			this.maxHeightTxtBox.Size = new System.Drawing.Size(100, 22);
 			this.maxHeightTxtBox.TabIndex = 2;
@@ -209,7 +218,7 @@ namespace SpriteSheetPacker
 			// 
 			this.label4.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
 			this.label4.AutoSize = true;
-			this.label4.Location = new System.Drawing.Point(65, 411);
+			this.label4.Location = new System.Drawing.Point(59, 331);
 			this.label4.Name = "label4";
 			this.label4.Size = new System.Drawing.Size(53, 17);
 			this.label4.TabIndex = 2;
@@ -218,9 +227,9 @@ namespace SpriteSheetPacker
 			// label5
 			// 
 			this.label5.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-			this.label5.Location = new System.Drawing.Point(266, 380);
+			this.label5.Location = new System.Drawing.Point(261, 283);
 			this.label5.Name = "label5";
-			this.label5.Size = new System.Drawing.Size(106, 17);
+			this.label5.Size = new System.Drawing.Size(107, 17);
 			this.label5.TabIndex = 2;
 			this.label5.Text = "Image File:";
 			this.label5.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
@@ -228,7 +237,8 @@ namespace SpriteSheetPacker
 			// imageFileTxtBox
 			// 
 			this.imageFileTxtBox.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-			this.imageFileTxtBox.Location = new System.Drawing.Point(378, 377);
+			this.imageFileTxtBox.Location = new System.Drawing.Point(373, 279);
+			this.imageFileTxtBox.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
 			this.imageFileTxtBox.Name = "imageFileTxtBox";
 			this.imageFileTxtBox.ReadOnly = true;
 			this.imageFileTxtBox.Size = new System.Drawing.Size(287, 22);
@@ -237,9 +247,10 @@ namespace SpriteSheetPacker
 			// browseImageBtn
 			// 
 			this.browseImageBtn.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-			this.browseImageBtn.Location = new System.Drawing.Point(671, 377);
+			this.browseImageBtn.Location = new System.Drawing.Point(665, 279);
+			this.browseImageBtn.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
 			this.browseImageBtn.Name = "browseImageBtn";
-			this.browseImageBtn.Size = new System.Drawing.Size(38, 22);
+			this.browseImageBtn.Size = new System.Drawing.Size(37, 22);
 			this.browseImageBtn.TabIndex = 9;
 			this.browseImageBtn.Text = "...";
 			this.browseImageBtn.UseVisualStyleBackColor = true;
@@ -248,9 +259,9 @@ namespace SpriteSheetPacker
 			// label6
 			// 
 			this.label6.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-			this.label6.Location = new System.Drawing.Point(266, 409);
+			this.label6.Location = new System.Drawing.Point(261, 311);
 			this.label6.Name = "label6";
-			this.label6.Size = new System.Drawing.Size(106, 17);
+			this.label6.Size = new System.Drawing.Size(107, 17);
 			this.label6.TabIndex = 2;
 			this.label6.Text = "Map File:";
 			this.label6.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
@@ -258,7 +269,8 @@ namespace SpriteSheetPacker
 			// mapFileTxtBox
 			// 
 			this.mapFileTxtBox.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-			this.mapFileTxtBox.Location = new System.Drawing.Point(378, 406);
+			this.mapFileTxtBox.Location = new System.Drawing.Point(373, 309);
+			this.mapFileTxtBox.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
 			this.mapFileTxtBox.Name = "mapFileTxtBox";
 			this.mapFileTxtBox.ReadOnly = true;
 			this.mapFileTxtBox.Size = new System.Drawing.Size(287, 22);
@@ -267,9 +279,10 @@ namespace SpriteSheetPacker
 			// browseMapBtn
 			// 
 			this.browseMapBtn.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-			this.browseMapBtn.Location = new System.Drawing.Point(671, 406);
+			this.browseMapBtn.Location = new System.Drawing.Point(665, 309);
+			this.browseMapBtn.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
 			this.browseMapBtn.Name = "browseMapBtn";
-			this.browseMapBtn.Size = new System.Drawing.Size(38, 22);
+			this.browseMapBtn.Size = new System.Drawing.Size(37, 22);
 			this.browseMapBtn.TabIndex = 11;
 			this.browseMapBtn.Text = "...";
 			this.browseMapBtn.UseVisualStyleBackColor = true;
@@ -289,7 +302,8 @@ namespace SpriteSheetPacker
 			// 
 			this.powOf2CheckBox.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
 			this.powOf2CheckBox.AutoSize = true;
-			this.powOf2CheckBox.Location = new System.Drawing.Point(15, 446);
+			this.powOf2CheckBox.Location = new System.Drawing.Point(9, 365);
+			this.powOf2CheckBox.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
 			this.powOf2CheckBox.Name = "powOf2CheckBox";
 			this.powOf2CheckBox.RightToLeft = System.Windows.Forms.RightToLeft.No;
 			this.powOf2CheckBox.Size = new System.Drawing.Size(224, 21);
@@ -301,7 +315,8 @@ namespace SpriteSheetPacker
 			// 
 			this.squareCheckBox.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
 			this.squareCheckBox.AutoSize = true;
-			this.squareCheckBox.Location = new System.Drawing.Point(15, 473);
+			this.squareCheckBox.Location = new System.Drawing.Point(9, 393);
+			this.squareCheckBox.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
 			this.squareCheckBox.Name = "squareCheckBox";
 			this.squareCheckBox.RightToLeft = System.Windows.Forms.RightToLeft.No;
 			this.squareCheckBox.Size = new System.Drawing.Size(185, 21);
@@ -313,7 +328,7 @@ namespace SpriteSheetPacker
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(721, 523);
+			this.ClientSize = new System.Drawing.Size(717, 441);
 			this.Controls.Add(this.squareCheckBox);
 			this.Controls.Add(this.powOf2CheckBox);
 			this.Controls.Add(this.browseMapBtn);
@@ -334,7 +349,8 @@ namespace SpriteSheetPacker
 			this.Controls.Add(this.clearBtn);
 			this.Controls.Add(this.removeImageBtn);
 			this.Controls.Add(this.listBox1);
-			this.MinimumSize = new System.Drawing.Size(739, 488);
+			this.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+			this.MinimumSize = new System.Drawing.Size(735, 486);
 			this.Name = "SpriteSheetPackerForm";
 			this.Text = "Sprite Sheet Packer";
 			this.ResumeLayout(false);

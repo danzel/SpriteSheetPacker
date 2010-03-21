@@ -67,9 +67,12 @@ namespace SpriteSheetPacker
 
 		protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
 		{
-			buildProcess.Kill();
-			buildProcess.Dispose();
-			buildProcess = null;
+            if (buildProcess != null)
+            {
+                buildProcess.Kill();
+                buildProcess.Dispose();
+                buildProcess = null;
+            }
 		}
 
 		// configures our image save dialog to take into account all loaded image exporters
@@ -223,7 +226,7 @@ namespace SpriteSheetPacker
 				}
 				
 				mapFileTxtBox.Text = imageSaveFileDialog.FileName.Remove(imageSaveFileDialog.FileName.Length - 3) + currentMapExporter.MapExtension.ToLower();
-			}
+            }
 		}
 
 		private void browseMapBtn_Click(object sender, EventArgs e)
@@ -326,7 +329,7 @@ namespace SpriteSheetPacker
 			}
 
 			string args = string.Format(
-				" /image:{0} /map:{1} /mw:{2} /mh:{3} /pad:{4} {5} {6} /il:{7}",
+				" /image:\"{0}\" /map:\"{1}\" /mw:{2} /mh:{3} /pad:{4} {5} {6} /il:\"{7}\"",
 				image,
 				map,
 				mw, 
@@ -343,6 +346,9 @@ namespace SpriteSheetPacker
 			buildProcess.StartInfo.UseShellExecute = false;
 
 			buildProcess.Exited += new EventHandler(process_Exited);
+            buildProcess.EnableRaisingEvents = true;    // enable the exited event
+            buildProcess.SynchronizingObject = this;    // handle the exited event on the thread for this form
+
 			if (!buildProcess.Start())
 				success = false;
 		}
@@ -370,6 +376,6 @@ namespace SpriteSheetPacker
 		private static void ShowBuildError(string error)
 		{
 			MessageBox.Show(error, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-		}
+        }
 	}
 }
