@@ -54,16 +54,18 @@ namespace sspack
 		/// <param name="maximumWidth">The maximum width of the output image.</param>
 		/// <param name="maximumHeight">The maximum height of the output image.</param>
 		/// <param name="imagePadding">The amount of blank space to insert in between individual images.</param>
+		/// <param name="generateMap">Whether or not to generate the map dictionary.</param>
 		/// <param name="outputImage">The resulting output image.</param>
 		/// <param name="outputMap">The resulting output map of placement rectangles for the images.</param>
-		/// <returns>True if the packing was successful, false otherwise.</returns>
-		public bool PackImage(
+		/// <returns>0 if the packing was successful, error code otherwise.</returns>
+		public int PackImage(
 			IEnumerable<string> imageFiles, 
 			bool requirePowerOfTwo, 
 			bool requireSquareImage, 
 			int maximumWidth,
 			int maximumHeight,
 			int imagePadding,
+			bool generateMap,
 			out Bitmap outputImage, 
 			out Dictionary<string, Rectangle> outputMap)
 		{
@@ -86,7 +88,7 @@ namespace sspack
 			{
 				Bitmap bitmap = Bitmap.FromFile(image) as Bitmap;
 				if (bitmap == null)
-					return false;
+					return (int)FailCode.FailedToLoadImage;
 				imageSizes.Add(image, bitmap.Size);
 			}
 
@@ -101,50 +103,57 @@ namespace sspack
 					if (c != 0)
 						return c;
 
-					return -b1.Height.CompareTo(b2.Height);
+					c = -b1.Height.CompareTo(b2.Height);
+					if (c != 0)
+						return c;
+
+					return f1.CompareTo(f2);
 				});
 
 			// try to pack the images
 			if (!PackImageRectangles())
-				return false;
+				return (int)FailCode.FailedToPackImage;
 
 			// make our output image
 			outputImage = CreateOutputImage();
 			if (outputImage == null)
-				return false;
+				return (int)FailCode.FailedToSaveImage;
 
-			// go through our image placements and replace the width/height found in there with
-			// each image's actual width/height (since the ones in imagePlacement will have padding)
-			string[] keys = new string[imagePlacement.Keys.Count];
-			imagePlacement.Keys.CopyTo(keys, 0);
-			foreach (var k in keys)
+			if (generateMap)
 			{
-				// get the actual size
-				Size s = imageSizes[k];
+				// go through our image placements and replace the width/height found in there with
+				// each image's actual width/height (since the ones in imagePlacement will have padding)
+				string[] keys = new string[imagePlacement.Keys.Count];
+				imagePlacement.Keys.CopyTo(keys, 0);
+				foreach (var k in keys)
+				{
+					// get the actual size
+					Size s = imageSizes[k];
 
-				// get the placement rectangle
-				Rectangle r = imagePlacement[k];
+					// get the placement rectangle
+					Rectangle r = imagePlacement[k];
 
-				// set the proper size
-				r.Width = s.Width;
-				r.Height = s.Height;
+					// set the proper size
+					r.Width = s.Width;
+					r.Height = s.Height;
 
-				// insert back into the dictionary
-				imagePlacement[k] = r;
-			}
+					// insert back into the dictionary
+					imagePlacement[k] = r;
+				}
 
-			// copy the placement dictionary to the output
-			outputMap = new Dictionary<string, Rectangle>();
-			foreach (var pair in imagePlacement)
-			{
-				outputMap.Add(pair.Key, pair.Value);
+				// copy the placement dictionary to the output
+				outputMap = new Dictionary<string, Rectangle>();
+				foreach (var pair in imagePlacement)
+				{
+					outputMap.Add(pair.Key, pair.Value);
+				}
 			}
 
 			// clear our dictionaries just to free up some memory
 			imageSizes.Clear();
 			imagePlacement.Clear();
 
-			return true;
+			return 0;
 		}
 
 		// This method does some trickery type stuff where we perform the TestPackingImages method over and over, 

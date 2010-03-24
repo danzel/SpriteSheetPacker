@@ -44,12 +44,6 @@ namespace SpriteSheetPacker
 		// a list of the files we'll build into our sprite sheet
 		private readonly List<string> files = new List<string>();
 
-		// did our build succeed
-		private bool success;
-
-		// our build process
-		private Process buildProcess;
-
 		public SpriteSheetPackerForm()
 		{
 			InitializeComponent();
@@ -63,16 +57,6 @@ namespace SpriteSheetPacker
 			maxWidthTxtBox.Text = sspack.Constants.DefaultMaximumSheetWidth.ToString();
 			maxHeightTxtBox.Text = sspack.Constants.DefaultMaximumSheetHeight.ToString();
 			paddingTxtBox.Text = sspack.Constants.DefaultImagePadding.ToString();
-		}
-
-		protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
-		{
-            if (buildProcess != null)
-            {
-                buildProcess.Kill();
-                buildProcess.Dispose();
-                buildProcess = null;
-            }
 		}
 
 		// configures our image save dialog to take into account all loaded image exporters
@@ -297,19 +281,12 @@ namespace SpriteSheetPacker
 			foreach (Control control in Controls)
 				control.Enabled = false;
 
-			stopWatch.Reset();
-			stopWatch.Start();
-			BuildSpriteSheet();
-		}
-
-		private void BuildSpriteSheet()
-		{
-			// read our values. we check before this thread, so no worries here
 			int mw = int.Parse(maxWidthTxtBox.Text);
 			int mh = int.Parse(maxHeightTxtBox.Text);
 			int pad = int.Parse(paddingTxtBox.Text);
 			bool pow2 = powOf2CheckBox.Checked;
 			bool square = squareCheckBox.Checked;
+			bool generateMap = generateMapCheckBox.Checked;
 			string image = imageFileTxtBox.Text;
 			string map = mapFileTxtBox.Text;
 
@@ -328,38 +305,33 @@ namespace SpriteSheetPacker
 				}
 			}
 
-			string args = string.Format(
-				" /image:\"{0}\" /map:\"{1}\" /mw:{2} /mh:{3} /pad:{4} {5} {6} /il:\"{7}\"",
-				image,
-				map,
-				mw, 
-				mh, 
-				pad, 
-				pow2 ? "/pow2" : "", 
-				square ? "/sqr" : "", 
-				fileList);
+			// construct the arguments in a list so we can pass the array cleanly to sspack.Program.Launch()
+			List<string> args = new List<string>();
+			args.Add("/image:" + image);
+			if (generateMap)
+				args.Add("/map:" + map);
+			args.Add("/mw:" + mw);
+			args.Add("/mh:" + mh);
+			args.Add("/pad:" + pad);
+			if (pow2)
+				args.Add("/pow2");
+			if (square)
+				args.Add("/sqr");
+			args.Add("/il:" + fileList);
 
-			buildProcess = new Process();
-			buildProcess.StartInfo.FileName = "sspack.exe";
-			buildProcess.StartInfo.Arguments = args;
-			buildProcess.StartInfo.CreateNoWindow = true;
-			buildProcess.StartInfo.UseShellExecute = false;
+			int sspackResult = 0;
+			Thread buildThread = new Thread(() => sspackResult = sspack.Program.Launch(args.ToArray()));
 
-			buildProcess.Exited += new EventHandler(process_Exited);
-            buildProcess.EnableRaisingEvents = true;    // enable the exited event
-            buildProcess.SynchronizingObject = this;    // handle the exited event on the thread for this form
+			stopWatch.Reset();
+			stopWatch.Start();
+			buildThread.Start();
 
-			if (!buildProcess.Start())
-				success = false;
-		}
+			// wait for the thread to complete
+			while (buildThread.IsAlive) { Thread.Sleep(5); }
 
-		void process_Exited(object sender, EventArgs e)
-		{
-			success = buildProcess.ExitCode == 0;
-			buildProcess = null;
 			stopWatch.Stop();
 
-			if (success)
+			if (sspackResult == 0)
 			{
 #if DEBUG
 				MessageBox.Show("Build completed in " + stopWatch.Elapsed.TotalSeconds + " seconds.");
@@ -367,10 +339,31 @@ namespace SpriteSheetPacker
 				MessageBox.Show("Build Complete", "Finished", MessageBoxButtons.OK, MessageBoxIcon.Information);
 #endif
 			}
+			else
+			{
+				ShowBuildError("Error packing images: " + SpaceErrorCode((sspack.FailCode)sspackResult));
+			}
 
 			// re-enable all our controls
 			foreach (Control control in Controls)
 				control.Enabled = true;
+		}
+
+		private static string SpaceErrorCode(sspack.FailCode failCode)
+		{
+			string error = failCode.ToString();
+
+			string result = error[0].ToString();
+
+			for (int i = 1; i < error.Length; i++)
+			{
+				char c = error[i];
+				if (char.IsUpper(c))
+					result += " ";
+				result += c;
+			}
+
+			return result;
 		}
 
 		private static void ShowBuildError(string error)

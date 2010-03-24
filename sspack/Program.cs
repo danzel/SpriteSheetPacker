@@ -29,16 +29,41 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Text.RegularExpressions;
+using System.Diagnostics;
 
 namespace sspack
 {
-	class Program
+	public enum FailCode
+	{
+		FailedParsingArguments = 1,
+		ImageExporter,
+		MapExporter,
+		NoImages,
+		ImageNameCollision,
+
+		FailedToLoadImage,
+		FailedToPackImage,
+		FailedToCreateImage,
+		FailedToSaveImage,
+		FailedToSaveMap
+	}
+
+	public class Program
 	{
 		static int Main(string[] args)
 		{
+			return Launch(args);
+		}
+
+		public static int Launch(string[] args)
+		{
 			ProgramArguments arguments = ProgramArguments.Parse(args);
 
-			if (arguments != null)
+			if (arguments == null)
+			{
+				return (int)FailCode.FailedParsingArguments;
+			}
+			else
 			{
 				// make sure we have our list of exporters
 				Exporters.Load();
@@ -48,8 +73,6 @@ namespace sspack
 				IMapExporter mapExporter = null;
 
 				string imageExtension = Path.GetExtension(arguments.image).Substring(1).ToLower();
-				string mapExtension = Path.GetExtension(arguments.map).Substring(1).ToLower();
-
 				foreach (var exporter in Exporters.ImageExporters)
 				{
 					if (exporter.ImageExtension.ToLower() == imageExtension)
@@ -59,19 +82,29 @@ namespace sspack
 					}
 				}
 
-				foreach (var exporter in Exporters.MapExporters)
+				if (imageExporter == null)
 				{
-					if (exporter.MapExtension.ToLower() == mapExtension)
-					{
-						mapExporter = exporter;
-						break;
-					}
+					Console.WriteLine("Failed to find exporters for specified image type.");
+					return (int)FailCode.ImageExporter;
 				}
 
-				if (imageExporter == null || mapExporter == null)
+				if (!string.IsNullOrEmpty(arguments.map))
 				{
-					Console.WriteLine("Failed to find exporters for specified file types.");
-					return -1;
+					string mapExtension = Path.GetExtension(arguments.map).Substring(1).ToLower();
+					foreach (var exporter in Exporters.MapExporters)
+					{
+						if (exporter.MapExtension.ToLower() == mapExtension)
+						{
+							mapExporter = exporter;
+							break;
+						}
+					}
+
+					if (mapExporter == null)
+					{
+						Console.WriteLine("Failed to find exporters for specified map type.");
+						return (int)FailCode.MapExporter;
+					}
 				}
 
 				// compile a list of images
@@ -82,22 +115,25 @@ namespace sspack
 				if (images.Count == 0)
 				{
 					Console.WriteLine("No images to pack.");
-					return -1;
+					return (int)FailCode.NoImages;
 				}
 
-				// make sure no images have the same name
-				for (int i = 0; i < images.Count; i++)
+				// make sure no images have the same name if we're building a map
+				if (mapExporter != null)
 				{
-					string str1 = Path.GetFileNameWithoutExtension(images[i]);
-
-					for (int j = i + 1; j < images.Count; j++)
+					for (int i = 0; i < images.Count; i++)
 					{
-						string str2 = Path.GetFileNameWithoutExtension(images[j]);
+						string str1 = Path.GetFileNameWithoutExtension(images[i]);
 
-						if (str1 == str2)
+						for (int j = i + 1; j < images.Count; j++)
 						{
-							Console.WriteLine("Two images have the same name: {0} = {1}", images[i], images[j]);
-							return -1;
+							string str2 = Path.GetFileNameWithoutExtension(images[j]);
+
+							if (str1 == str2)
+							{
+								Console.WriteLine("Two images have the same name: {0} = {1}", images[i], images[j]);
+								return (int)FailCode.ImageNameCollision;
+							}
 						}
 					}
 				}
@@ -106,22 +142,41 @@ namespace sspack
 				ImagePacker imagePacker = new ImagePacker();
 				Bitmap outputImage;
 				Dictionary<string, Rectangle> outputMap;
-				if (!imagePacker.PackImage(images, arguments.pow2, arguments.sqr, arguments.mw, arguments.mh, arguments.pad, out outputImage, out outputMap))
+
+				// pack the image, generating a map only if desired
+				int result = imagePacker.PackImage(images, arguments.pow2, arguments.sqr, arguments.mw, arguments.mh, arguments.pad, mapExporter != null, out outputImage, out outputMap);
+				if (result != 0)
 				{
 					Console.WriteLine("There was an error making the image sheet.");
-					return -1;
+					return result;
 				}
 
 				// try to save using our exporters
-				try
+				try 
 				{
+					if (File.Exists(arguments.image))
+						File.Delete(arguments.image);
 					imageExporter.Save(arguments.image, outputImage);
-					mapExporter.Save(arguments.map, outputMap);
 				}
 				catch (Exception e)
 				{
-					Console.WriteLine("Error saving files: " + e.Message);
-					return -1;
+					Console.WriteLine("Error saving file: " + e.Message);
+					return (int)FailCode.FailedToSaveImage;
+				}
+				
+				if (mapExporter != null)
+				{
+					try
+					{
+						if (File.Exists(arguments.map))
+							File.Delete(arguments.map); 
+						mapExporter.Save(arguments.map, outputMap);
+					}
+					catch (Exception e)
+					{
+						Console.WriteLine("Error saving file: " + e.Message);
+						return (int)FailCode.FailedToSaveMap;
+					}
 				}
 			}
 
@@ -132,16 +187,13 @@ namespace sspack
 		{
 			List<string> inputFiles = new List<string>();
 
-			if (arguments.il != null)
+			if (!string.IsNullOrEmpty(arguments.il))
 			{
-				foreach (var listFile in arguments.il)
+				using (StreamReader reader = new StreamReader(arguments.il))
 				{
-					using (StreamReader reader = new StreamReader(listFile))
+					while (!reader.EndOfStream)
 					{
-						while (!reader.EndOfStream)
-						{
-							inputFiles.Add(reader.ReadLine());
-						}
+						inputFiles.Add(reader.ReadLine());
 					}
 				}
 			}

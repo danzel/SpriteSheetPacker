@@ -77,6 +77,7 @@ namespace SpriteSheetPacker
 			this.mapSaveFileDialog = new System.Windows.Forms.SaveFileDialog();
 			this.powOf2CheckBox = new System.Windows.Forms.CheckBox();
 			this.squareCheckBox = new System.Windows.Forms.CheckBox();
+			this.generateMapCheckBox = new System.Windows.Forms.CheckBox();
 			this.SuspendLayout();
 			// 
 			// listBox1
@@ -324,11 +325,27 @@ namespace SpriteSheetPacker
 			this.squareCheckBox.Text = "Require Square Output?";
 			this.squareCheckBox.UseVisualStyleBackColor = true;
 			// 
+			// generateMapCheckBox
+			// 
+			this.generateMapCheckBox.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
+			this.generateMapCheckBox.AutoSize = true;
+			this.generateMapCheckBox.Checked = true;
+			this.generateMapCheckBox.CheckState = System.Windows.Forms.CheckState.Checked;
+			this.generateMapCheckBox.Location = new System.Drawing.Point(373, 335);
+			this.generateMapCheckBox.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+			this.generateMapCheckBox.Name = "generateMapCheckBox";
+			this.generateMapCheckBox.RightToLeft = System.Windows.Forms.RightToLeft.No;
+			this.generateMapCheckBox.Size = new System.Drawing.Size(129, 21);
+			this.generateMapCheckBox.TabIndex = 13;
+			this.generateMapCheckBox.Text = "Generate Map?";
+			this.generateMapCheckBox.UseVisualStyleBackColor = true;
+			// 
 			// SpriteSheetPackerForm
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.ClientSize = new System.Drawing.Size(717, 441);
+			this.Controls.Add(this.generateMapCheckBox);
 			this.Controls.Add(this.squareCheckBox);
 			this.Controls.Add(this.powOf2CheckBox);
 			this.Controls.Add(this.browseMapBtn);
@@ -383,6 +400,7 @@ namespace SpriteSheetPacker
 		private System.Windows.Forms.SaveFileDialog mapSaveFileDialog;
 		private System.Windows.Forms.CheckBox powOf2CheckBox;
 		private System.Windows.Forms.CheckBox squareCheckBox;
+		private System.Windows.Forms.CheckBox generateMapCheckBox;
 	}
 }
 

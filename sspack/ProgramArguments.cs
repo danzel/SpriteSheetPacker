@@ -39,7 +39,7 @@ namespace sspack
 		[Argument(ArgumentType.Required, ShortName = "", HelpText = "Output file name for the image.")]
 		public string image;
 
-		[Argument(ArgumentType.Required, ShortName = "", HelpText = "Output file name for the map.")]
+		[Argument(ArgumentType.AtMostOnce, ShortName = "", HelpText = "Output file name for the map.")]
 		public string map;
 
 		[Argument(ArgumentType.AtMostOnce, ShortName = "", HelpText = "Maximum ouput width.", DefaultValue = Constants.DefaultMaximumSheetWidth)]
@@ -60,8 +60,8 @@ namespace sspack
 		[Argument(ArgumentType.AtMostOnce, ShortName = "", HelpText = "Searches subdirectories of any input directories.")]
 		public bool r = false;
 
-		[Argument(ArgumentType.MultipleUnique, ShortName = "", HelpText = "Path(s) to file(s) listing the images to build.")]
-		public string[] il;
+		[Argument(ArgumentType.AtMostOnce, ShortName = "", HelpText = "Path to file listing the images to build.")]
+		public string il;
 
 		[DefaultArgument(ArgumentType.Multiple, HelpText = "Images to pack.")]
 		public string[] input;
