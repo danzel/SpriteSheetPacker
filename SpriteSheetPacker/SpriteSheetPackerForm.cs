@@ -31,6 +31,7 @@ using System.Drawing;
 using System.IO;
 using System.Threading;
 using System.Windows.Forms;
+using System.Runtime.InteropServices;
 
 namespace SpriteSheetPacker
 {
@@ -318,20 +319,27 @@ namespace SpriteSheetPacker
 			if (square)
 				args.Add("/sqr");
 			args.Add("/il:" + fileList);
-
-			int sspackResult = 0;
-			Thread buildThread = new Thread(() => sspackResult = sspack.Program.Launch(args.ToArray()));
+			
+			Thread buildThread = new Thread(delegate(object obj)
+			{
+				int sspackResult = sspack.Program.Launch(args.ToArray());
+				(obj as Control).Invoke(new Action<int>(BuildThreadComplete), new[] { (object)sspackResult });
+			})
+			{
+				IsBackground = true,
+				Name = "Sprite Sheet Packer Worker Thread",
+			};
 
 			stopWatch.Reset();
 			stopWatch.Start();
-			buildThread.Start();
+			buildThread.Start(this);
+		}
 
-			// wait for the thread to complete
-			while (buildThread.IsAlive) { Thread.Sleep(5); }
-
+		private void BuildThreadComplete(int result)
+		{
 			stopWatch.Stop();
 
-			if (sspackResult == 0)
+			if (result == 0)
 			{
 #if DEBUG
 				MessageBox.Show("Build completed in " + stopWatch.Elapsed.TotalSeconds + " seconds.");
@@ -341,7 +349,7 @@ namespace SpriteSheetPacker
 			}
 			else
 			{
-				ShowBuildError("Error packing images: " + SpaceErrorCode((sspack.FailCode)sspackResult));
+				ShowBuildError("Error packing images: " + SpaceErrorCode((sspack.FailCode)result));
 			}
 
 			// re-enable all our controls
