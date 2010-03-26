@@ -40,17 +40,8 @@ namespace SpriteSheetPacker
 			Application.EnableVisualStyles();
 			Application.SetCompatibleTextRenderingDefault(false);
 
-			sspack.Exporters.Load();
-
-			// create the form
-			SpriteSheetPackerForm form = new SpriteSheetPackerForm();
-
-			// have the form generate the right filters and things for our save dialogs
-			form.GenerateImageSaveDialog();
-			form.GenerateMapSaveDialog();
-
 			// run the app
-			Application.Run(form);
+			Application.Run(new SpriteSheetPackerForm());
 		}
 	}
 }

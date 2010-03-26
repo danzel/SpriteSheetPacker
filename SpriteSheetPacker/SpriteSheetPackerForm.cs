@@ -49,37 +49,68 @@ namespace SpriteSheetPacker
 		{
 			InitializeComponent();
 
+			// find all of the available exporters
+			sspack.Exporters.Load();
+
+			// generate the save dialogs based on available exporters
+			GenerateImageSaveDialog();
+			GenerateMapSaveDialog();
+
 			// set our open file dialog filter based on the valid extensions
 			imageOpenFileDialog.Filter = "Image Files|";
 			foreach (var ext in sspack.MiscHelper.AllowedImageExtensions) 
 				imageOpenFileDialog.Filter += string.Format("*.{0};", ext);
 
-			// set the UI values to our defaults
-			maxWidthTxtBox.Text = sspack.Constants.DefaultMaximumSheetWidth.ToString();
-			maxHeightTxtBox.Text = sspack.Constants.DefaultMaximumSheetHeight.ToString();
-			paddingTxtBox.Text = sspack.Constants.DefaultImagePadding.ToString();
+			// set the UI values to our saved settings
+            maxWidthTxtBox.Text = SpriteSheetPacker.Settings.Default.MaxWidth.ToString();
+            maxHeightTxtBox.Text = SpriteSheetPacker.Settings.Default.MaxHeight.ToString();
+            paddingTxtBox.Text = SpriteSheetPacker.Settings.Default.Padding.ToString();
+            powOf2CheckBox.Checked = SpriteSheetPacker.Settings.Default.PowOf2;
+            squareCheckBox.Checked = SpriteSheetPacker.Settings.Default.Square;
 		}
 
 		// configures our image save dialog to take into account all loaded image exporters
 		public void GenerateImageSaveDialog()
 		{
 			string filter = "";
-			foreach (var exporter in sspack.Exporters.ImageExporters)
-				filter += string.Format("{0} Files|*.{1}|", exporter.ImageExtension.ToUpper(), exporter.ImageExtension);
+            int filterIndex = 0;
+            int i = 0;
+
+            foreach (var exporter in sspack.Exporters.ImageExporters)
+            {
+                i++;
+                filter += string.Format("{0} Files|*.{1}|", exporter.ImageExtension.ToUpper(), exporter.ImageExtension);
+                if (exporter.ImageExtension.ToLower() == SpriteSheetPacker.Settings.Default.ImageExt)
+                {
+                    filterIndex = i;
+                }
+            }
 			filter = filter.Remove(filter.Length - 1);
 
 			imageSaveFileDialog.Filter = filter;
+            imageSaveFileDialog.FilterIndex = filterIndex;
 		}
 
 		// configures our map save dialog to take into account all loaded map exporters
 		public void GenerateMapSaveDialog()
 		{
 			string filter = "";
-			foreach (var exporter in sspack.Exporters.MapExporters)
-				filter += string.Format("{0} Files|*.{1}|", exporter.MapExtension.ToUpper(), exporter.MapExtension);
+            int filterIndex = 0;
+            int i = 0;
+
+            foreach (var exporter in sspack.Exporters.MapExporters)
+            {
+                i++;
+                filter += string.Format("{0} Files|*.{1}|", exporter.MapExtension.ToUpper(), exporter.MapExtension);
+                if (exporter.MapExtension.ToLower() == SpriteSheetPacker.Settings.Default.MapExt)
+                {
+                    filterIndex = i;
+                }
+            }
 			filter = filter.Remove(filter.Length - 1);
 
 			mapSaveFileDialog.Filter = filter;
+            mapSaveFileDialog.FilterIndex = filterIndex;
 		}
 
         private void AddFiles(IEnumerable<string> paths)
@@ -195,23 +226,39 @@ namespace SpriteSheetPacker
 				imageFileTxtBox.Text = imageSaveFileDialog.FileName;
 
 				// figure out which image exporter to use based on the extension
+                string imageExtension = Path.GetExtension(imageSaveFileDialog.FileName).Substring(1);
 				foreach (var exporter in sspack.Exporters.ImageExporters)
 				{
-					if (exporter.ImageExtension.Equals(Path.GetExtension(imageSaveFileDialog.FileName).Substring(1), StringComparison.InvariantCultureIgnoreCase))
+					if (exporter.ImageExtension.Equals(imageExtension, StringComparison.InvariantCultureIgnoreCase))
 					{
-						currentImageExporter = exporter;
+						currentImageExporter = exporter;    
 						break;
 					}
 				}
+                SpriteSheetPacker.Settings.Default.ImageExt = imageExtension;
 				
-				// if there is no selected map exporter, default to the first map exporter
-				if (currentMapExporter == null)
+				// if there is no selected map exporter, default to the last used
+                if (currentMapExporter == null)
 				{
-					currentMapExporter = sspack.Exporters.MapExporters[0];
+                    string mapExtension = SpriteSheetPacker.Settings.Default.MapExt;
+                    foreach (var exporter in sspack.Exporters.MapExporters)
+                    {
+                        if (exporter.MapExtension.Equals(mapExtension, StringComparison.InvariantCultureIgnoreCase))
+                        {
+                            currentMapExporter = exporter;
+                            break;
+                        }
+                    }
+
+                    // if the last used map exporter didn't exist, default to the first one
+                    if (currentMapExporter == null)
+                    {
+                        currentMapExporter = sspack.Exporters.MapExporters[0];
+                    }
 				}
 				
 				mapFileTxtBox.Text = imageSaveFileDialog.FileName.Remove(imageSaveFileDialog.FileName.Length - 3) + currentMapExporter.MapExtension.ToLower();
-            }
+			}
 		}
 
 		private void browseMapBtn_Click(object sender, EventArgs e)
@@ -224,22 +271,16 @@ namespace SpriteSheetPacker
 				mapFileTxtBox.Text = mapSaveFileDialog.FileName;
 
 				// figure out which map exporter to use based on the extension
+                string mapExtension = Path.GetExtension(mapSaveFileDialog.FileName).Substring(1);
 				foreach (var exporter in sspack.Exporters.MapExporters)
 				{
-					if (exporter.MapExtension.Equals(Path.GetExtension(mapSaveFileDialog.FileName).Substring(1), StringComparison.InvariantCultureIgnoreCase))
+                    if (exporter.MapExtension.Equals(mapExtension, StringComparison.InvariantCultureIgnoreCase))
 					{
 						currentMapExporter = exporter;
 						break;
 					}
 				}
-
-				// if there is no selected image exporter, default to the first image exporter
-				if (currentImageExporter == null)
-				{
-					currentImageExporter = sspack.Exporters.ImageExporters[0];
-				}
-
-				imageFileTxtBox.Text = mapSaveFileDialog.FileName.Remove(mapSaveFileDialog.FileName.Length - 3) + currentImageExporter.ImageExtension.ToLower();
+                SpriteSheetPacker.Settings.Default.MapExt = mapExtension;
 			}
 		}
 
@@ -278,9 +319,9 @@ namespace SpriteSheetPacker
 				return;
 			}
 
-			// disable all the controls while the build happens
-			foreach (Control control in Controls)
-				control.Enabled = false;
+            // disable all the controls while the build happens
+            foreach (Control control in Controls)
+                control.Enabled = false;
 
 			int mw = int.Parse(maxWidthTxtBox.Text);
 			int mh = int.Parse(maxHeightTxtBox.Text);
@@ -355,6 +396,27 @@ namespace SpriteSheetPacker
 			// re-enable all our controls
 			foreach (Control control in Controls)
 				control.Enabled = true;
+		}
+
+		protected override void OnClosed(EventArgs e)
+		{
+			// get our UI values if they are valid
+			int outputWidth, outputHeight, padding;
+
+			if (int.TryParse(maxWidthTxtBox.Text, out outputWidth) && outputWidth > 0)
+				SpriteSheetPacker.Settings.Default.MaxWidth = outputWidth;
+
+			if (int.TryParse(maxHeightTxtBox.Text, out outputHeight) && outputHeight > 0)
+				SpriteSheetPacker.Settings.Default.MaxHeight = outputHeight;
+
+			if (int.TryParse(paddingTxtBox.Text, out padding) && padding >= 0)
+				SpriteSheetPacker.Settings.Default.Padding = padding;
+
+			SpriteSheetPacker.Settings.Default.PowOf2 = powOf2CheckBox.Checked;
+			SpriteSheetPacker.Settings.Default.Square = squareCheckBox.Checked;
+
+			// save the settings
+			SpriteSheetPacker.Settings.Default.Save();
 		}
 
 		private static string SpaceErrorCode(sspack.FailCode failCode)
