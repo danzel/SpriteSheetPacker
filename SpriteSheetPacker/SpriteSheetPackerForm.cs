@@ -67,6 +67,7 @@ namespace SpriteSheetPacker
             paddingTxtBox.Text = SpriteSheetPacker.Settings.Default.Padding.ToString();
             powOf2CheckBox.Checked = SpriteSheetPacker.Settings.Default.PowOf2;
             squareCheckBox.Checked = SpriteSheetPacker.Settings.Default.Square;
+			generateMapCheckBox.Checked = SpriteSheetPacker.Settings.Default.GenerateMap;
 		}
 
 		// configures our image save dialog to take into account all loaded image exporters
@@ -414,6 +415,7 @@ namespace SpriteSheetPacker
 
 			SpriteSheetPacker.Settings.Default.PowOf2 = powOf2CheckBox.Checked;
 			SpriteSheetPacker.Settings.Default.Square = squareCheckBox.Checked;
+			SpriteSheetPacker.Settings.Default.GenerateMap = generateMapCheckBox.Checked;
 
 			// save the settings
 			SpriteSheetPacker.Settings.Default.Save();

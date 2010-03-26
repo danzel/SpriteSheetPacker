@@ -106,5 +106,17 @@ namespace SpriteSheetPacker {
                 this["Padding"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool GenerateMap {
+            get {
+                return ((bool)(this["GenerateMap"]));
+            }
+            set {
+                this["GenerateMap"] = value;
+            }
+        }
     }
 }
