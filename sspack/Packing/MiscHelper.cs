@@ -24,6 +24,7 @@
 
 #endregion
 
+using System;
 using System.IO;
 
 namespace sspack
@@ -37,7 +38,10 @@ namespace sspack
 		public static bool IsImageFile(string file)
 		{
 			if (!File.Exists(file))
+			{
+				Console.WriteLine("file does not exist " + file);
 				return false;
+			}
 
 			// ToLower for string comparisons
 			string fileLower = file.ToLower();

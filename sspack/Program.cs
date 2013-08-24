@@ -121,20 +121,18 @@ namespace sspack
 				// make sure no images have the same name if we're building a map
 				if (mapExporter != null)
 				{
+					Dictionary<string, string> usedFileNames = new Dictionary<string, string>();
+
 					for (int i = 0; i < images.Count; i++)
 					{
-						string str1 = Path.GetFileNameWithoutExtension(images[i]);
+						string packedFilename = Constants.PackedFilename(images[i]);
 
-						for (int j = i + 1; j < images.Count; j++)
+						if (usedFileNames.ContainsKey(packedFilename))
 						{
-							string str2 = Path.GetFileNameWithoutExtension(images[j]);
-
-							if (str1 == str2)
-							{
-								Console.WriteLine("Two images have the same name: {0} = {1}", images[i], images[j]);
-								return (int)FailCode.ImageNameCollision;
-							}
+							Console.WriteLine("Two images have the same name: {0} = {1}", images[i], usedFileNames[packedFilename]);
+							return (int)FailCode.ImageNameCollision;
 						}
+						usedFileNames.Add(packedFilename, images[i]);
 					}
 				}
 
@@ -152,7 +150,7 @@ namespace sspack
 				}
 
 				// try to save using our exporters
-				try 
+				try
 				{
 					if (File.Exists(arguments.image))
 						File.Delete(arguments.image);
@@ -163,13 +161,13 @@ namespace sspack
 					Console.WriteLine("Error saving file: " + e.Message);
 					return (int)FailCode.FailedToSaveImage;
 				}
-				
+
 				if (mapExporter != null)
 				{
 					try
 					{
 						if (File.Exists(arguments.map))
-							File.Delete(arguments.map); 
+							File.Delete(arguments.map);
 						mapExporter.Save(arguments.map, outputMap);
 					}
 					catch (Exception e)
@@ -208,6 +206,10 @@ namespace sspack
 				if (MiscHelper.IsImageFile(str))
 				{
 					images.Add(str);
+				}
+				else
+				{
+					Console.WriteLine("WARN: {0} is not an image file", str);
 				}
 			}
 		}

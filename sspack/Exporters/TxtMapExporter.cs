@@ -53,13 +53,7 @@ namespace sspack
 					Rectangle destination = map[image];
 
 					// write out the destination rectangle for this bitmap
-					writer.WriteLine(string.Format(
-	                 	"{0} = {1} {2} {3} {4}", 
-	                 	Path.GetFileNameWithoutExtension(image), 
-	                 	destination.X, 
-	                 	destination.Y, 
-	                 	destination.Width, 
-	                 	destination.Height));
+					writer.WriteLine("{0} = {1} {2} {3} {4}", Constants.PackedFilename(image), destination.X, destination.Y, destination.Width, destination.Height);
 				}
 			}
 		}

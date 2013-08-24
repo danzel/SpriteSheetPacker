@@ -27,6 +27,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using sspack;
 
 namespace SpriteSheetPacker.XnaExporters
 {
@@ -50,13 +51,7 @@ namespace SpriteSheetPacker.XnaExporters
 				foreach (var entry in map)
 				{
 					Rectangle r = entry.Value;
-					writer.WriteLine(string.Format(
-						"<Item><Key>{0}</Key><Value>{1} {2} {3} {4}</Value></Item>", 
-						Path.GetFileNameWithoutExtension(entry.Key), 
-						r.X, 
-						r.Y, 
-						r.Width, 
-						r.Height));
+					writer.WriteLine("<Item><Key>{0}</Key><Value>{1} {2} {3} {4}</Value></Item>", Constants.PackedFilename(entry.Key), r.X, r.Y, r.Width, r.Height);
 				}
 
 				writer.WriteLine("</Asset>");
