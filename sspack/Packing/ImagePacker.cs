@@ -58,7 +58,7 @@ namespace sspack
 		/// <param name="outputImage">The resulting output image.</param>
 		/// <param name="outputMap">The resulting output map of placement rectangles for the images.</param>
 		/// <returns>0 if the packing was successful, error code otherwise.</returns>
-		public int PackImage(
+		public FailCode PackImage(
 			IEnumerable<string> imageFiles, 
 			bool requirePowerOfTwo, 
 			bool requireSquareImage, 
@@ -88,7 +88,7 @@ namespace sspack
 			{
 				Bitmap bitmap = Bitmap.FromFile(image) as Bitmap;
 				if (bitmap == null)
-					return (int)FailCode.FailedToLoadImage;
+					return FailCode.FailedToLoadImage;
 				imageSizes.Add(image, bitmap.Size);
 			}
 
@@ -112,12 +112,12 @@ namespace sspack
 
 			// try to pack the images
 			if (!PackImageRectangles())
-				return (int)FailCode.FailedToPackImage;
+				return FailCode.FailedToPackImage;
 
 			// make our output image
 			outputImage = CreateOutputImage();
 			if (outputImage == null)
-				return (int)FailCode.FailedToSaveImage;
+				return FailCode.FailedToSaveImage;
 
 			if (generateMap)
 			{
@@ -153,7 +153,7 @@ namespace sspack
 			imageSizes.Clear();
 			imagePlacement.Clear();
 
-			return 0;
+			return FailCode.Success;
 		}
 
 		// This method does some trickery type stuff where we perform the TestPackingImages method over and over, 
