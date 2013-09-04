@@ -83,13 +83,50 @@ namespace sspack
 			imageSizes.Clear();
 			imagePlacement.Clear();
 
+			List<string> paddedHorizontally = new List<string>();
+			List<string> paddedVertically = new List<string>();
+			Dictionary<string, Bitmap> imageBitmaps = new Dictionary<string, Bitmap>();
+
 			// get the sizes of all the images
 			foreach (var image in files)
 			{
 				Bitmap bitmap = Bitmap.FromFile(image) as Bitmap;
 				if (bitmap == null)
 					return FailCode.FailedToLoadImage;
+
+				if (bitmap.Width == 1)
+				{
+					paddedHorizontally.Add(image);
+					var newBitmap = new Bitmap(bitmap.Width + 2, bitmap.Height);
+					using (var g = Graphics.FromImage(newBitmap))
+					{
+						g.Clear(Color.Transparent);
+						//draw in original location
+						g.DrawImage(bitmap, 1, 0);
+						//pad left, right
+						g.DrawImage(bitmap, new Rectangle(0, 0, 1, bitmap.Height), new Rectangle(0, 0, 1, bitmap.Height), GraphicsUnit.Pixel);
+						g.DrawImage(bitmap, new Rectangle(newBitmap.Width - 1, 0, 1, bitmap.Height), new Rectangle(bitmap.Width - 1, 0, 1, bitmap.Height), GraphicsUnit.Pixel);
+					}
+					bitmap = newBitmap;
+				}
+				if (bitmap.Height == 1)
+				{
+					paddedVertically.Add(image);
+					var newBitmap = new Bitmap(bitmap.Width, bitmap.Height + 2);
+					using (var g = Graphics.FromImage(newBitmap))
+					{
+						g.Clear(Color.Transparent);
+						//draw in original location
+						g.DrawImage(bitmap, 0, 1);
+						//pad top, bottom
+						g.DrawImage(bitmap, new Rectangle(0, 0, bitmap.Width, 1), new Rectangle(0, 0, bitmap.Width, 1), GraphicsUnit.Pixel);
+						g.DrawImage(bitmap, new Rectangle(0, newBitmap.Height - 1, bitmap.Width, 1), new Rectangle(0, bitmap.Height - 1, bitmap.Width, 1), GraphicsUnit.Pixel);
+					}
+					bitmap = newBitmap;
+				}
+
 				imageSizes.Add(image, bitmap.Size);
+				imageBitmaps.Add(image, bitmap);
 			}
 
 			// sort our files by file size so we place large sprites first
@@ -115,7 +152,7 @@ namespace sspack
 				return FailCode.FailedToPackImage;
 
 			// make our output image
-			outputImage = CreateOutputImage();
+			outputImage = CreateOutputImage(imageBitmaps);
 			if (outputImage == null)
 				return FailCode.FailedToSaveImage;
 
@@ -136,6 +173,17 @@ namespace sspack
 					// set the proper size
 					r.Width = s.Width;
 					r.Height = s.Height;
+
+					if (paddedHorizontally.Contains(k))
+					{
+						r.Width -= 2;
+						r.X++;
+					}
+					if (paddedVertically.Contains(k))
+					{
+						r.Height -= 2;
+						r.Y++;
+					}
 
 					// insert back into the dictionary
 					imagePlacement[k] = r;
@@ -282,7 +330,7 @@ namespace sspack
 			return true;
 		}
 
-		private Bitmap CreateOutputImage()
+		private Bitmap CreateOutputImage(Dictionary<string, Bitmap> imageBitmaps)
 		{
 			try
 			{
@@ -292,9 +340,7 @@ namespace sspack
 				foreach (var image in files)
 				{
 					Rectangle location = imagePlacement[image];
-					Bitmap bitmap = Bitmap.FromFile(image) as Bitmap;
-					if (bitmap == null)
-						return null;
+					Bitmap bitmap = imageBitmaps[image];
 
 					// copy pixels over to avoid antialiasing or any other side effects of drawing
 					// the subimages to the output image using Graphics
