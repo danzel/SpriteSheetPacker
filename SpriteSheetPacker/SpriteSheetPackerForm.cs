@@ -364,7 +364,7 @@ namespace SpriteSheetPacker
 			
 			Thread buildThread = new Thread(delegate(object obj)
 			{
-				int sspackResult = sspack.Program.Launch(args.ToArray());
+				var sspackResult = sspack.Program.Launch(args.ToArray());
 				(obj as Control).Invoke(new Action<int>(BuildThreadComplete), new[] { (object)sspackResult });
 			})
 			{
