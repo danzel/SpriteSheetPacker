@@ -94,7 +94,7 @@ namespace sspack
 				if (bitmap == null)
 					return FailCode.FailedToLoadImage;
 
-				if (bitmap.Width == 1)
+				if (bitmap.Width <= 2)
 				{
 					paddedHorizontally.Add(image);
 					var newBitmap = new Bitmap(bitmap.Width + 2, bitmap.Height);
@@ -109,7 +109,7 @@ namespace sspack
 					}
 					bitmap = newBitmap;
 				}
-				if (bitmap.Height == 1)
+				if (bitmap.Height <= 2)
 				{
 					paddedVertically.Add(image);
 					var newBitmap = new Bitmap(bitmap.Width, bitmap.Height + 2);
