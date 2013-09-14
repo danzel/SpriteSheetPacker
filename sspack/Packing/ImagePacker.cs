@@ -94,7 +94,7 @@ namespace sspack
 				if (bitmap == null)
 					return FailCode.FailedToLoadImage;
 
-				if (bitmap.Width <= 2)
+				//if (bitmap.Width <= 2)
 				{
 					paddedHorizontally.Add(image);
 					var newBitmap = new Bitmap(bitmap.Width + 2, bitmap.Height);
@@ -102,14 +102,14 @@ namespace sspack
 					{
 						g.Clear(Color.Transparent);
 						//draw in original location
-						g.DrawImage(bitmap, 1, 0);
+						g.DrawImage(bitmap, new Rectangle(1, 0, bitmap.Width, bitmap.Height), new Rectangle(0, 0, bitmap.Width, bitmap.Height), GraphicsUnit.Pixel);
 						//pad left, right
 						g.DrawImage(bitmap, new Rectangle(0, 0, 1, bitmap.Height), new Rectangle(0, 0, 1, bitmap.Height), GraphicsUnit.Pixel);
 						g.DrawImage(bitmap, new Rectangle(newBitmap.Width - 1, 0, 1, bitmap.Height), new Rectangle(bitmap.Width - 1, 0, 1, bitmap.Height), GraphicsUnit.Pixel);
 					}
 					bitmap = newBitmap;
 				}
-				if (bitmap.Height <= 2)
+				//if (bitmap.Height <= 2)
 				{
 					paddedVertically.Add(image);
 					var newBitmap = new Bitmap(bitmap.Width, bitmap.Height + 2);
@@ -117,7 +117,7 @@ namespace sspack
 					{
 						g.Clear(Color.Transparent);
 						//draw in original location
-						g.DrawImage(bitmap, 0, 1);
+						g.DrawImage(bitmap, new Rectangle(0, 1, bitmap.Width, bitmap.Height), new Rectangle(0, 0, bitmap.Width, bitmap.Height), GraphicsUnit.Pixel);
 						//pad top, bottom
 						g.DrawImage(bitmap, new Rectangle(0, 0, bitmap.Width, 1), new Rectangle(0, 0, bitmap.Width, 1), GraphicsUnit.Pixel);
 						g.DrawImage(bitmap, new Rectangle(0, newBitmap.Height - 1, bitmap.Width, 1), new Rectangle(0, bitmap.Height - 1, bitmap.Width, 1), GraphicsUnit.Pixel);
